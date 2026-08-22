@@ -25,7 +25,7 @@ const server = createServer(app)
 initSocket(server)
 
 app.use(helmet({ contentSecurityPolicy: false }))
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] }))
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowedHeaders: ['Content-Type', 'Authorization'] }))
 app.use(compression())
 app.use(express.json({ limit: '10mb' }))
 
