@@ -1,8 +1,11 @@
 import { Request } from 'express'
 
-export interface AuthRequest extends Request<any, any, any, any> {
+export interface AuthRequest extends Request {
   userId?: string
   userEmail?: string
+  body: any
+  params: any
+  headers: any
 }
 
 export type Provider = 'surge' | 'netlify' | 'vercel' | 'cloudflare' | 'firebase' | 'github' | 'custom'
