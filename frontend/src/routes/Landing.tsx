@@ -33,8 +33,8 @@ export function Landing() {
 
       <nav className="fixed top-3 left-3 right-3 z-50 flex items-center justify-between px-8 lg:px-16 py-3 bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
         <div className="flex items-center gap-2.5">
-          <img src="/bookmark.png" alt="Journal Deployer" className="h-8 w-8" />
-          <span className="text-xl font-bold text-brand-red">Deployer</span>
+          <img src="/bookmark.png" alt="P.O.R.T" className="h-8 w-8" />
+          <span className="text-xl font-bold text-brand-red">P.O.R.T</span>
         </div>
         <Button onClick={() => navigate('/login')} variant="outline" className="rounded-full px-6 bg-white/50 backdrop-blur-sm border-white/50 hover:bg-white/80">
           Sign In <ChevronRight className="ml-1 h-4 w-4" />
@@ -69,7 +69,7 @@ export function Landing() {
               <div className="h-3 w-3 rounded-full bg-rose-400/80" />
               <div className="h-3 w-3 rounded-full bg-amber-400/80" />
               <div className="h-3 w-3 rounded-full bg-emerald-400/80" />
-              <span className="ml-2 text-xs text-muted-foreground font-mono">journal-deployer</span>
+              <span className="ml-2 text-xs text-muted-foreground font-mono">P.O.R.T</span>
             </div>
             <div className="grid grid-cols-3 gap-4">
               {(['surge', 'netlify', 'vercel'] as const).map((id) => (
@@ -105,8 +105,15 @@ export function Landing() {
         </div>
       </section>
 
-      <footer className="relative z-10 border-t border-border/50 py-8 text-center text-sm text-muted-foreground">
-        <p>Built with love · All hosting providers offer free tiers · $0 forever</p>
+      <footer className="relative z-10 border-t border-border/50 py-10 text-center text-sm text-muted-foreground">
+        <p className="mb-4">Built with love · All hosting providers offer free tiers · $0 forever</p>
+        <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground/60">
+          <span>&copy; {new Date().getFullYear()} P.O.R.T. All rights reserved.</span>
+          <span>·</span>
+          <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
+          <span>·</span>
+          <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
+        </div>
       </footer>
     </div>
   )

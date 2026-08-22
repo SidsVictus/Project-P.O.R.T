@@ -1,4 +1,4 @@
--- Journal Deployer Database Schema
+-- P.O.R.T Database Schema
 -- Run this in Supabase SQL Editor
 
 -- Sites table

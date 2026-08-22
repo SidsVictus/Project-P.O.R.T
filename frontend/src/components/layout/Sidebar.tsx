@@ -27,11 +27,11 @@ export function Sidebar() {
         {sidebarOpen && (
           <div className="flex items-center gap-2">
             <img src="/bookmark.png" alt="" className="h-7 w-7" />
-            <span className="text-lg font-bold text-brand-red">Deployer</span>
+            <span className="text-lg font-bold text-brand-red">P.O.R.T</span>
           </div>
         )}
         {!sidebarOpen && (
-          <img src="/bookmark.png" alt="Deployer" className="h-7 w-7 mx-auto" />
+          <img src="/bookmark.png" alt="P.O.R.T" className="h-7 w-7 mx-auto" />
         )}
         <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-secondary transition-colors">
           <ChevronLeft className={cn('h-5 w-5 transition-transform', !sidebarOpen && 'rotate-180')} />

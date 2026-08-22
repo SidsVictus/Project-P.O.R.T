@@ -3,7 +3,7 @@ import path from 'path'
 import os from 'os'
 import { randomBytes } from 'crypto'
 
-const UPLOAD_DIR = path.join(os.tmpdir(), 'journal-deployer-uploads')
+const UPLOAD_DIR = path.join(os.tmpdir(), 'port-uploads')
 
 export async function ensureUploadDir(): Promise<string> {
   const id = randomBytes(8).toString('hex')

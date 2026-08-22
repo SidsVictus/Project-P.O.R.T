@@ -28,7 +28,7 @@ export function Login() {
           className="w-full max-w-sm text-center"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src="/bookmark.png" alt="Journal Deployer" className="h-10 w-10" />
+            <img src="/bookmark.png" alt="P.O.R.T" className="h-10 w-10" />
           </div>
           <h2 className="text-2xl font-bold text-brand-red mb-2">Welcome</h2>
           <p className="text-gray-400 text-sm mb-8">Sign in to your deployment hub</p>

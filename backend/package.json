@@ -1,5 +1,5 @@
 {
-  "name": "journal-deployer-backend",
+  "name": "port-backend",
   "version": "1.0.0",
   "private": true,
   "scripts": {

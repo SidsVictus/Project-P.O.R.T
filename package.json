@@ -1,5 +1,5 @@
 {
-  "name": "journal-deployer",
+  "name": "port",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",

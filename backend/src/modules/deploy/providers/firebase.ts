@@ -25,7 +25,7 @@ export async function deployToFirebase(
 
   const commands = [
     cred?.token ? `npx firebase-tools login:ci --token ${cred.token}` : 'npx firebase-tools login',
-    `npx firebase-tools deploy --only hosting -m "Deployed via Journal Deployer"`,
+    `npx firebase-tools deploy --only hosting -m "Deployed via P.O.R.T"`,
   ].join(' && ')
 
   try {

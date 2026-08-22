@@ -19,14 +19,14 @@ export async function deployToGitHubPages(
     return { success: false, logs: '', error: 'GitHub token required. Add it in Settings > Credentials.' }
   }
 
-  const repoName = `journal-deployer-${siteName}`
+  const repoName = `port-${siteName}`
 
   const commands = [
     `git init`,
-    `git config user.email "deploy@journaldeployer.app"`,
-    `git config user.name "Journal Deployer"`,
+    `git config user.email "deploy@port.app"`,
+    `git config user.name "P.O.R.T"`,
     `git add -A`,
-    `git commit -m "Deploy via Journal Deployer"`,
+    `git commit -m "Deploy via P.O.R.T"`,
     `git branch -M gh-pages`,
     `git remote add origin https://${token}@github.com/${cred?.email || 'user'}/${repoName}.git`,
     `git push -f origin gh-pages`,
