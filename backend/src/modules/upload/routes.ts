@@ -9,7 +9,7 @@ const router = Router()
 router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
   try {
     const dir = await ensureUploadDir()
-    const files = req.files as multer.File[]
+    const files = req.files as any[]
 
     for (const file of files) {
       const relativePath = file.originalname.replace(/\\/g, '/')
