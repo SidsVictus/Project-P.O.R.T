@@ -37,6 +37,13 @@ class ApiClient {
     if (!res.ok) throw new Error('Upload failed')
     return res.json()
   }
+
+  async deleteUploadFile(uploadDir: string, filePath: string) {
+    return this.request<{ files: string[]; fileCount: number }>('/api/upload', {
+      method: 'DELETE',
+      body: JSON.stringify({ uploadDir, filePath }),
+    })
+  }
 }
 
 export const api = new ApiClient()

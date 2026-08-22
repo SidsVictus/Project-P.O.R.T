@@ -3,6 +3,7 @@ import { Provider } from '../../../shared/types'
 
 interface DeployState {
   uploadDir: string | null
+  uploadedFiles: string[]
   provider: Provider
   siteName: string
   hostingEmail: string
@@ -12,6 +13,8 @@ interface DeployState {
   deployLogs: string[]
   deployResult: { url?: string; success: boolean } | null
   setUploadDir: (dir: string | null) => void
+  setUploadedFiles: (files: string[]) => void
+  removeUploadedFile: (file: string) => void
   setProvider: (p: Provider) => void
   setSiteName: (n: string) => void
   setHostingEmail: (e: string) => void
@@ -25,6 +28,7 @@ interface DeployState {
 
 const initialState = {
   uploadDir: null,
+  uploadedFiles: [] as string[],
   provider: 'surge' as Provider,
   siteName: '',
   hostingEmail: '',
@@ -38,6 +42,8 @@ const initialState = {
 export const useDeployStore = create<DeployState>((set) => ({
   ...initialState,
   setUploadDir: (dir) => set({ uploadDir: dir }),
+  setUploadedFiles: (files) => set({ uploadedFiles: files }),
+  removeUploadedFile: (file) => set((s) => ({ uploadedFiles: s.uploadedFiles.filter((f) => f !== file) })),
   setProvider: (p) => set({ provider: p }),
   setSiteName: (n) => set({ siteName: n }),
   setHostingEmail: (e) => set({ hostingEmail: e }),

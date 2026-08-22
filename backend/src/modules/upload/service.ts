@@ -37,6 +37,11 @@ export async function getUploadedFiles(uploadDir: string): Promise<string[]> {
   return files
 }
 
+export async function deleteFile(uploadDir: string, relativePath: string): Promise<void> {
+  const fullPath = path.join(uploadDir, relativePath)
+  await fs.rm(fullPath, { force: true })
+}
+
 export async function cleanupUploadDir(uploadDir: string): Promise<void> {
   try {
     await fs.rm(uploadDir, { recursive: true, force: true })
