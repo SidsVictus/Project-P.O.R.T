@@ -28,9 +28,10 @@ class ApiClient {
   put<T>(path: string, body: unknown) { return this.request<T>(path, { method: 'PUT', body: JSON.stringify(body) }) }
   delete<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }) }
 
-  async uploadFiles(files: File[]) {
+  async uploadFiles(files: File[], existingDir?: string) {
     const formData = new FormData()
     files.forEach(f => formData.append('files', f))
+    if (existingDir) formData.append('uploadDir', existingDir)
     const headers: Record<string, string> = {}
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
     const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers, body: formData })
@@ -39,7 +40,7 @@ class ApiClient {
   }
 
   async deleteUploadFile(uploadDir: string, filePath: string) {
-    return this.request<{ files: string[]; fileCount: number }>('/api/upload', {
+    return this.request<{ files: { name: string; size: number }[]; fileCount: number }>('/api/upload', {
       method: 'DELETE',
       body: JSON.stringify({ uploadDir, filePath }),
     })

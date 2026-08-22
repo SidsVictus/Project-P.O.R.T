@@ -5,7 +5,16 @@ import { randomBytes } from 'crypto'
 
 const UPLOAD_DIR = path.join(os.tmpdir(), 'port-uploads')
 
-export async function ensureUploadDir(): Promise<string> {
+export interface UploadedFileInfo {
+  name: string
+  size: number
+}
+
+export async function ensureUploadDir(existingDir?: string): Promise<string> {
+  if (existingDir) {
+    await fs.mkdir(existingDir, { recursive: true })
+    return existingDir
+  }
   const id = randomBytes(8).toString('hex')
   const dir = path.join(UPLOAD_DIR, id)
   await fs.mkdir(dir, { recursive: true })
@@ -20,8 +29,8 @@ export async function saveFile(uploadDir: string, relativePath: string, buffer: 
   return fullPath
 }
 
-export async function getUploadedFiles(uploadDir: string): Promise<string[]> {
-  const files: string[] = []
+export async function getUploadedFiles(uploadDir: string): Promise<UploadedFileInfo[]> {
+  const files: UploadedFileInfo[] = []
   async function walk(dir: string) {
     const entries = await fs.readdir(dir, { withFileTypes: true })
     for (const entry of entries) {
@@ -29,11 +38,14 @@ export async function getUploadedFiles(uploadDir: string): Promise<string[]> {
       if (entry.isDirectory()) {
         await walk(fullPath)
       } else {
-        files.push(path.relative(uploadDir, fullPath))
+        const stat = await fs.stat(fullPath)
+        files.push({ name: path.relative(uploadDir, fullPath), size: stat.size })
       }
     }
   }
-  await walk(uploadDir)
+  try {
+    await walk(uploadDir)
+  } catch {}
   return files
 }
 

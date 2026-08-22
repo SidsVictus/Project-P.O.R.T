@@ -8,7 +8,8 @@ const router = Router()
 
 router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
   try {
-    const dir = await ensureUploadDir()
+    const existingDir = req.body.uploadDir || req.query.uploadDir as string | undefined
+    const dir = await ensureUploadDir(existingDir)
     const files = req.files as any[]
 
     for (const file of files) {
@@ -17,7 +18,7 @@ router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
     }
 
     const fileNames = await getUploadedFiles(dir)
-    res.json({ uploadDir: dir, fileCount: files.length, files: fileNames })
+    res.json({ uploadDir: dir, fileCount: fileNames.length, files: fileNames })
   } catch (error) {
     res.status(500).json({ error: 'Upload failed' })
   }

@@ -1,9 +1,14 @@
 import { create } from 'zustand'
 import { Provider } from '../../../shared/types'
 
+export interface FileInfo {
+  name: string
+  size: number
+}
+
 interface DeployState {
   uploadDir: string | null
-  uploadedFiles: string[]
+  uploadedFiles: FileInfo[]
   provider: Provider
   siteName: string
   hostingEmail: string
@@ -13,7 +18,7 @@ interface DeployState {
   deployLogs: string[]
   deployResult: { url?: string; success: boolean } | null
   setUploadDir: (dir: string | null) => void
-  setUploadedFiles: (files: string[]) => void
+  setUploadedFiles: (files: FileInfo[]) => void
   removeUploadedFile: (file: string) => void
   setProvider: (p: Provider) => void
   setSiteName: (n: string) => void
@@ -27,23 +32,23 @@ interface DeployState {
 }
 
 const initialState = {
-  uploadDir: null,
-  uploadedFiles: [] as string[],
+  uploadDir: null as string | null,
+  uploadedFiles: [] as FileInfo[],
   provider: 'surge' as Provider,
   siteName: '',
   hostingEmail: '',
   scheduledAt: '',
   showTerminal: false,
   deploying: false,
-  deployLogs: [],
-  deployResult: null,
+  deployLogs: [] as string[],
+  deployResult: null as { url?: string; success: boolean } | null,
 }
 
 export const useDeployStore = create<DeployState>((set) => ({
   ...initialState,
   setUploadDir: (dir) => set({ uploadDir: dir }),
   setUploadedFiles: (files) => set({ uploadedFiles: files }),
-  removeUploadedFile: (file) => set((s) => ({ uploadedFiles: s.uploadedFiles.filter((f) => f !== file) })),
+  removeUploadedFile: (file) => set((s) => ({ uploadedFiles: s.uploadedFiles.filter((f) => f.name !== file) })),
   setProvider: (p) => set({ provider: p }),
   setSiteName: (n) => set({ siteName: n }),
   setHostingEmail: (e) => set({ hostingEmail: e }),
