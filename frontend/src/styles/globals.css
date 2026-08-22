@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'OriginSerif';
+  src: url('/fonts/OriginSerif.otf') format('opentype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SayHello';
+  src: url('/fonts/SayHello.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --background: 220 25% 96%;
+    --foreground: 220 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 12%;
+    --primary: 225 70% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 95%;
+    --secondary-foreground: 220 15% 30%;
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 198 80% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --brand-red: 355 70% 65%;
+    --border: 220 16% 88%;
+    --input: 220 16% 88%;
+    --ring: 225 70% 55%;
+    --radius: 1rem;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'OriginSerif', Georgia, serif;
+    font-weight: 900;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(225 70% 70% / 0.25); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(225 70% 70% / 0.4); }
+
+/* ---- Blue Cube Grid Pattern ---- */
+.bg-pattern {
+  background-image:
+    linear-gradient(rgba(80, 120, 200, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(80, 120, 200, 0.25) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 1;
+}
+
+/* ---- Glass ---- */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.03),
+    0 4px 16px rgba(0,0,0,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.glass-hover:hover {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.05),
+    0 12px 40px rgba(0,0,0,0.07),
+    inset 0 1px 0 rgba(255,255,255,0.7);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* ---- Gradient Text ---- */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(var(--brand-red)) 0%, hsl(225 70% 55%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- Brand Red Text ---- */
+.text-brand-red {
+  color: hsl(var(--brand-red));
+}
+
+/* ---- Mesh Background ---- */
+.mesh-bg {
+  background-image:
+    radial-gradient(at 20% 30%, hsl(210 80% 80% / 0.5) 0px, transparent 55%),
+    radial-gradient(at 75% 15%, hsl(225 70% 78% / 0.4) 0px, transparent 55%),
+    radial-gradient(at 50% 80%, hsl(198 70% 80% / 0.35) 0px, transparent 55%),
+    radial-gradient(at 85% 70%, hsl(210 60% 82% / 0.25) 0px, transparent 55%);
+}
+
+/* ---- Blue Grid Background ---- */
+.cube-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---- Floating Orbs ---- */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+/* ---- Animations ---- */
+.animate-fade-in {
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Stat Card ---- */
+.stat-card {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+}
+
+/* ---- Chart Overlay ---- */
+.chart-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(12px);
+  animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ---- Skeleton ---- */
+.skeleton {
+  background: linear-gradient(110deg, hsl(var(--muted)) 30%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---- Button Glow ---- */
+.btn-glow {
+  box-shadow: 0 4px 20px hsl(225 70% 55% / 0.3);
+  transition: all 0.3s ease;
+}
+.btn-glow:hover {
+  box-shadow: 0 6px 28px hsl(225 70% 55% / 0.45);
+  transform: translateY(-1px);
+}
+
+.terminal-container .xterm { padding: 12px; }
+
+/* Hide native datetime picker icon (we use custom clickable icon) */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  display: none;
+}

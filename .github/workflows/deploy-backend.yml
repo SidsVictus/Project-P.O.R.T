@@ -1,0 +1,22 @@
+name: Deploy Backend to Northflank
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'docker/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Northflank
+        uses: northflank/deploy-action@v1
+        with:
+          northflank-api-token: ${{ secrets.NORTHFLANK_API_TOKEN }}
+          project-id: ${{ secrets.NORTHFLANK_PROJECT_ID }}
+          service-id: ${{ secrets.NORTHFLANK_SERVICE_ID }}
