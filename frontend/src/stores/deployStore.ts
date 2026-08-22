@@ -11,7 +11,7 @@ interface DeployState {
   deploying: boolean
   deployLogs: string[]
   deployResult: { url?: string; success: boolean } | null
-  setUploadDir: (dir: string) => void
+  setUploadDir: (dir: string | null) => void
   setProvider: (p: Provider) => void
   setSiteName: (n: string) => void
   setHostingEmail: (e: string) => void

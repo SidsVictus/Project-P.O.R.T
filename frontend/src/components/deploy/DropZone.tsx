@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, FolderOpen, FileCode, Image, Film, Music, File } from 'lucide-react'
+import { Upload, FolderOpen, Trash2, FileCode, Image, Film, Music, File } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useDeployStore } from '../../stores/deployStore'
 import { api } from '../../lib/api'
@@ -49,6 +49,17 @@ export function DropZone() {
               <p className="text-lg font-semibold text-emerald-400">Files uploaded successfully</p>
               <p className="text-sm text-muted-foreground mt-1">Click or drop to replace</p>
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setUploadDir(null)
+                toast.success('Files removed', { id: 'upload' })
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove Files
+            </button>
           </>
         ) : (
           <>
