@@ -120,11 +120,12 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/analytics', analyticsRoutes)
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Server error:', err.message, err.stack)
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ error: err.message })
   } else {
     logger.error({ err }, 'Unhandled error')
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: err.message || 'Internal server error' })
   }
 })
 
