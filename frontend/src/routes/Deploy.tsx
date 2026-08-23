@@ -9,7 +9,6 @@ import { useDeployStore } from '../stores/deployStore'
 import { useDeploy } from '../hooks/useDeploy'
 import { useWebSocket } from '../hooks/useWebSocket'
 import toast from 'react-hot-toast'
-import { api } from '../lib/api'
 
 export function Deploy() {
   const navigate = useNavigate()
@@ -23,14 +22,7 @@ export function Deploy() {
     if (!siteName.trim()) return toast.error('Enter a site name')
 
     try {
-      const siteRes = await api.post('/api/sites', {
-        name: siteName,
-        provider: useDeployStore.getState().provider,
-        status: 'active',
-      }) as any
-
       await deployMutation.mutateAsync({
-        siteId: siteRes.id,
         provider: useDeployStore.getState().provider,
         siteName,
         uploadDir,

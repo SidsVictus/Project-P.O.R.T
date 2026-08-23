@@ -1,4 +1,4 @@
-import { zipSync } from 'fflate'
+import { zip } from 'fflate'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -48,13 +48,19 @@ class ApiClient {
 
   async uploadFiles(files: File[], existingDir?: string) {
     const filtered = files.filter(f => !shouldIgnore((f as any).webkitRelativePath || f.name))
-    const fileData: Record<string, Uint8Array> = {}
-    for (const f of filtered) {
-      const name = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
-      fileData[name] = new Uint8Array(await f.arrayBuffer())
-    }
-    const zipped = zipSync(fileData, { level: 0 })
-    const blob = new Blob([zipped], { type: 'application/zip' })
+    const entries: [string, Uint8Array][] = await Promise.all(
+      filtered.map(async f => {
+        const name = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
+        return [name, new Uint8Array(await f.arrayBuffer())] as [string, Uint8Array]
+      })
+    )
+    const zipped = await new Promise<Uint8Array>((resolve, reject) => {
+      zip(Object.fromEntries(entries), { level: 0 }, (err, data) => {
+        if (err) reject(err)
+        else resolve(data)
+      })
+    })
+    const blob = new Blob([new Uint8Array(zipped) as BlobPart], { type: 'application/zip' })
     const formData = new FormData()
     formData.append('files', blob, 'upload.zip')
     if (existingDir) formData.append('uploadDir', existingDir)

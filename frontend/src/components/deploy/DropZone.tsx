@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, useMemo } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, FolderPlus, Folder, FolderOpen, File, Paperclip } from 'lucide-react'
+import { Upload, X, FolderPlus, Folder, FolderOpen, File, Paperclip, Loader2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useDeployStore } from '../../stores/deployStore'
 import { api, shouldIgnore } from '../../lib/api'
@@ -49,27 +49,47 @@ function buildTree(files: { name: string; size: number }[]): TreeNode[] {
   return root
 }
 
-function TreeItem({ node, depth, onRemove }: { node: TreeNode; depth: number; onRemove: (path: string) => void }) {
-  const [open, setOpen] = useState(true)
-  const totalSize = useMemo(() => {
-    if (!node.isDir) return node.size
-    return node.children.reduce((s, c) => s + (c.isDir ? c.children.reduce((s2, cc) => s2 + cc.size, 0) : c.size), 0)
-  }, [node])
-
+function TreeItem({
+  node,
+  depth,
+  onRemove,
+  expandedPaths,
+  toggleFolder,
+}: {
+  node: TreeNode
+  depth: number
+  onRemove: (path: string) => void
+  expandedPaths: Set<string>
+  toggleFolder: (path: string) => void
+}) {
   if (node.isDir) {
+    const open = expandedPaths.has(node.path)
+    const totalSize = node.children.reduce((s, c) => {
+      if (c.isDir) return s + c.children.reduce((s2, cc) => s2 + cc.size, 0)
+      return s + c.size
+    }, 0)
     return (
       <div>
         <div
           className="flex items-center gap-2 px-2 py-1 hover:bg-white/30 transition-colors cursor-pointer select-none"
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
-          onClick={() => setOpen(!open)}
+          onClick={() => toggleFolder(node.path)}
         >
-          {open ? <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" /> : <Folder className="h-4 w-4 text-amber-500 shrink-0" />}
+          {open
+            ? <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" />
+            : <Folder className="h-4 w-4 text-amber-500 shrink-0" />}
           <span className="text-sm font-medium text-foreground">{node.name}/</span>
           <span className="text-xs text-muted-foreground ml-auto shrink-0">({formatSize(totalSize)})</span>
         </div>
         {open && node.children.map(child => (
-          <TreeItem key={child.path} node={child} depth={depth + 1} onRemove={onRemove} />
+          <TreeItem
+            key={child.path}
+            node={child}
+            depth={depth + 1}
+            onRemove={onRemove}
+            expandedPaths={expandedPaths}
+            toggleFolder={toggleFolder}
+          />
         ))}
       </div>
     )
@@ -96,34 +116,48 @@ function TreeItem({ node, depth, onRemove }: { node: TreeNode; depth: number; on
 export function DropZone() {
   const { setUploadDir, uploadDir, uploadedFiles, setUploadedFiles, removeUploadedFile } = useDeployStore()
   const folderInputRef = useRef<HTMLInputElement>(null)
+  const [rawFiles, setRawFiles] = useState<File[]>([])
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set())
+  const [zipping, setZipping] = useState(false)
 
   const tree = useMemo(() => buildTree(uploadedFiles), [uploadedFiles])
 
+  const toggleFolder = useCallback((path: string) => {
+    setExpandedPaths(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }, [])
+
   const upload = useCallback(async (files: File[]) => {
     if (!files.length) return
-    const currentDir = useDeployStore.getState().uploadDir
-    const currentFiles = useDeployStore.getState().uploadedFiles
     const kept = files.filter(f => !shouldIgnore((f as any).webkitRelativePath || f.name))
     const skipped = files.length - kept.length
+
+    const newEntries = kept.map(f => ({
+      name: ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/'),
+      size: f.size,
+    }))
+
+    const existing = useDeployStore.getState().uploadedFiles
+    const existingPaths = new Set(existing.map(f => f.name))
+    const unique = newEntries.filter(e => !existingPaths.has(e.name))
+
+    setRawFiles(prev => [...prev, ...kept])
+    setUploadedFiles([...existing, ...unique])
+
     try {
-      toast.loading(`Zipping ${kept.length} files${skipped ? ` (${skipped} skipped)` : ''}...`, { id: 'upload' })
+      setZipping(true)
+      const currentDir = useDeployStore.getState().uploadDir
       const result = await api.uploadFiles(files, currentDir || undefined)
       setUploadDir(result.uploadDir)
-      const serverFiles = result.files
-      if (serverFiles && serverFiles.length > 0) {
-        setUploadedFiles(serverFiles)
-      } else {
-        const clientFiles = kept.map(f => ({ name: f.webkitRelativePath || f.name, size: f.size }))
-        const existing = currentDir ? currentFiles : []
-        const merged = [...existing]
-        for (const cf of clientFiles) {
-          if (!merged.some(m => m.name === cf.name)) merged.push(cf)
-        }
-        setUploadedFiles(merged)
-      }
       toast.success(`${kept.length} files uploaded${skipped ? ` (${skipped} junk skipped)` : ''}`, { id: 'upload' })
     } catch (err) {
       toast.error('Upload failed', { id: 'upload' })
+    } finally {
+      setZipping(false)
     }
   }, [setUploadDir, setUploadedFiles])
 
@@ -138,21 +172,20 @@ export function DropZone() {
     e.target.value = ''
   }, [upload])
 
-  const handleRemoveFile = useCallback(async (file: string, e?: React.MouseEvent) => {
+  const handleRemoveFile = useCallback(async (filePath: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (!uploadDir) return
-    try {
-      const result = await api.deleteUploadFile(uploadDir, file)
-      if (result.files && result.files.length === 0) {
-        setUploadDir(null)
-        setUploadedFiles([])
-      } else {
-        removeUploadedFile(file)
-      }
-    } catch (err) {
-      removeUploadedFile(file)
+    const nextFiles = rawFiles.filter(f => ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/') !== filePath)
+    setRawFiles(nextFiles)
+    if (nextFiles.length === 0) {
+      setUploadDir(null)
+      setUploadedFiles([])
+    } else {
+      setUploadedFiles(nextFiles.map(f => ({
+        name: ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/'),
+        size: f.size,
+      })))
     }
-  }, [uploadDir, setUploadDir, removeUploadedFile, setUploadedFiles])
+  }, [rawFiles, setUploadDir, setUploadedFiles])
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
@@ -176,7 +209,15 @@ export function DropZone() {
       >
         <input {...getInputProps()} />
 
-        {uploadedFiles.length === 0 && (
+        {zipping && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-2xl">
+            <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
+            <p className="text-sm font-medium text-foreground">Preparing files...</p>
+            <p className="text-xs text-muted-foreground mt-1">Zipping in background</p>
+          </div>
+        )}
+
+        {uploadedFiles.length === 0 && !zipping && (
           <div className="flex flex-col items-center gap-3" onClick={open}>
             <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center animate-pulse-slow">
               <Upload className="h-7 w-7 text-primary" />
@@ -190,14 +231,21 @@ export function DropZone() {
           </div>
         )}
 
-        {uploadedFiles.length > 0 && (
+        {uploadedFiles.length > 0 && !zipping && (
           <div onClick={(e) => e.stopPropagation()}>
             <div className="px-4 pt-3 pb-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">
               Attachments ({uploadedFiles.length})
             </div>
             <div className="py-1">
               {tree.map(node => (
-                <TreeItem key={node.path} node={node} depth={0} onRemove={handleRemoveFile} />
+                <TreeItem
+                  key={node.path}
+                  node={node}
+                  depth={0}
+                  onRemove={handleRemoveFile}
+                  expandedPaths={expandedPaths}
+                  toggleFolder={toggleFolder}
+                />
               ))}
             </div>
           </div>
@@ -228,6 +276,7 @@ export function DropZone() {
                 e.stopPropagation()
                 setUploadDir(null)
                 setUploadedFiles([])
+                setRawFiles([])
                 toast.success('All files removed')
               }}
               className="text-sm text-destructive hover:text-destructive/80 font-medium transition-colors"

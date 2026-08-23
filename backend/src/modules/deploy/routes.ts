@@ -12,7 +12,6 @@ const TABLE = 'deployments'
 const SITES_TABLE = 'sites'
 
 const deploySchema = z.object({
-  siteId: z.string().uuid(),
   provider: z.enum(['surge', 'netlify', 'vercel', 'cloudflare', 'firebase', 'github', 'custom']),
   siteName: z.string().min(1),
   uploadDir: z.string().min(1),

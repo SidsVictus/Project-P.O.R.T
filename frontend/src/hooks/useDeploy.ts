@@ -4,7 +4,6 @@ import { useDeployStore } from '../stores/deployStore'
 import { Provider } from '../../../shared/types'
 
 interface DeployParams {
-  siteId: string
   provider: Provider
   siteName: string
   uploadDir: string
