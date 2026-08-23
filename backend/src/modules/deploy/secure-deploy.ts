@@ -1,4 +1,6 @@
 import { spawn } from 'child_process'
+import path from 'path'
+import os from 'os'
 import { ProviderDeployResult } from '../../shared/types'
 
 /**
@@ -64,17 +66,23 @@ export function sanitizeSiteName(siteName: string): string {
   return sanitized
 }
 
+
 /**
  * Validates upload directory path to prevent path traversal
+ * Allows paths in OS temp dir (where uploads are stored) or within project root
  */
 export function validateUploadDir(uploadDir: string, baseDir: string): string {
-  const resolved = require('path').resolve(uploadDir)
-  const resolvedBase = require('path').resolve(baseDir)
-  
-  if (!resolved.startsWith(resolvedBase)) {
+  const resolved = path.resolve(uploadDir)
+  const resolvedBase = path.resolve(baseDir)
+  const uploadBase = path.resolve(path.join(os.tmpdir(), 'port-uploads'))
+
+  const isInTmp = resolved.startsWith(uploadBase)
+  const isInProject = resolved.startsWith(resolvedBase)
+
+  if (!isInTmp && !isInProject) {
     throw new Error('Invalid upload directory: path traversal attempt detected')
   }
-  
+
   return resolved
 }
 

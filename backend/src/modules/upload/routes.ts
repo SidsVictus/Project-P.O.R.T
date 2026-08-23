@@ -12,13 +12,8 @@ router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
     const dir = await ensureUploadDir(existingDir)
     const files = req.files as any[]
 
-    let paths: string[] = []
-    try {
-      paths = JSON.parse(req.body.paths || '[]')
-    } catch {}
-
     for (let i = 0; i < files.length; i++) {
-      const relativePath = paths[i] || files[i].originalname.replace(/\\/g, '/')
+      const relativePath = files[i].originalname.replace(/\\/g, '/')
       await saveFile(dir, relativePath, files[i].buffer)
     }
 
