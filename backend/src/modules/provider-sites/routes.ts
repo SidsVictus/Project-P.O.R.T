@@ -28,6 +28,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     const connected: Provider[] = creds.map((c: any) => c.provider)
     const hasEnvSurge = !!process.env.SURGE_TOKEN
     if (hasEnvSurge && !connected.includes('surge')) connected.push('surge')
+    console.log('[ProviderSites] connected:', connected, 'hasEnvSurge:', hasEnvSurge)
     if (connected.length === 0) return res.json([])
 
     const results = await Promise.allSettled(
@@ -41,6 +42,10 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     const allSites = results
       .filter((r): r is PromiseFulfilledResult<any[]> => r.status === 'fulfilled')
       .flatMap((r) => r.value)
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') console.log(`[ProviderSites] ${connected[i]} failed:`, r.reason?.message)
+    })
+    console.log('[ProviderSites] found:', allSites.length, 'sites')
     res.json(allSites)
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to fetch provider sites' })
