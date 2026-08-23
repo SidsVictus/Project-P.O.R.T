@@ -1,6 +1,6 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState, useMemo } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, FolderPlus, Paperclip } from 'lucide-react'
+import { Upload, X, FolderPlus, Folder, FolderOpen, File, Paperclip } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useDeployStore } from '../../stores/deployStore'
 import { api } from '../../lib/api'
@@ -13,9 +13,91 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}G`
 }
 
+interface TreeNode {
+  name: string
+  path: string
+  size: number
+  isDir: boolean
+  children: TreeNode[]
+}
+
+function buildTree(files: { name: string; size: number }[]): TreeNode[] {
+  const root: TreeNode[] = []
+  for (const f of files) {
+    const parts = f.name.split('/')
+    let current = root
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]
+      const isLast = i === parts.length - 1
+      const existing = current.find(n => n.name === part)
+      if (existing) {
+        if (!isLast) { current = existing.children }
+        else { existing.size = f.size }
+      } else {
+        const node: TreeNode = {
+          name: part,
+          path: parts.slice(0, i + 1).join('/'),
+          size: isLast ? f.size : 0,
+          isDir: !isLast,
+          children: [],
+        }
+        current.push(node)
+        if (!isLast) { current = node.children }
+      }
+    }
+  }
+  return root
+}
+
+function TreeItem({ node, depth, onRemove }: { node: TreeNode; depth: number; onRemove: (path: string) => void }) {
+  const [open, setOpen] = useState(true)
+  const totalSize = useMemo(() => {
+    if (!node.isDir) return node.size
+    return node.children.reduce((s, c) => s + (c.isDir ? c.children.reduce((s2, cc) => s2 + cc.size, 0) : c.size), 0)
+  }, [node])
+
+  if (node.isDir) {
+    return (
+      <div>
+        <div
+          className="flex items-center gap-2 px-2 py-1 hover:bg-white/30 transition-colors cursor-pointer select-none"
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" /> : <Folder className="h-4 w-4 text-amber-500 shrink-0" />}
+          <span className="text-sm font-medium text-foreground">{node.name}/</span>
+          <span className="text-xs text-muted-foreground ml-auto shrink-0">({formatSize(totalSize)})</span>
+        </div>
+        {open && node.children.map(child => (
+          <TreeItem key={child.path} node={child} depth={depth + 1} onRemove={onRemove} />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="flex items-center gap-2 px-2 py-1 hover:bg-white/30 transition-colors group"
+      style={{ paddingLeft: `${depth * 16 + 8}px` }}
+    >
+      <File className="h-4 w-4 text-blue-500 shrink-0" />
+      <span className="truncate text-sm font-medium text-blue-600 flex-1 min-w-0">{node.name}</span>
+      <span className="text-xs text-muted-foreground shrink-0">({formatSize(node.size)})</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(node.path) }}
+        className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors shrink-0 opacity-60 group-hover:opacity-100"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
 export function DropZone() {
   const { setUploadDir, uploadDir, uploadedFiles, setUploadedFiles, removeUploadedFile } = useDeployStore()
   const folderInputRef = useRef<HTMLInputElement>(null)
+
+  const tree = useMemo(() => buildTree(uploadedFiles), [uploadedFiles])
 
   const upload = useCallback(async (files: File[]) => {
     if (!files.length) return
@@ -54,8 +136,8 @@ export function DropZone() {
     e.target.value = ''
   }, [upload])
 
-  const handleRemoveFile = useCallback(async (file: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleRemoveFile = useCallback(async (file: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
     if (!uploadDir) return
     try {
       const result = await api.deleteUploadFile(uploadDir, file)
@@ -111,25 +193,9 @@ export function DropZone() {
             <div className="px-4 pt-3 pb-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">
               Attachments ({uploadedFiles.length})
             </div>
-            <div className="divide-y divide-border/40">
-              {uploadedFiles.map((file) => (
-                <div
-                  key={file.name}
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-white/30 transition-colors group"
-                >
-                  <span className="truncate text-sm font-medium text-blue-600 flex-1 min-w-0">
-                    {file.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    ({formatSize(file.size)})
-                  </span>
-                  <button
-                    onClick={(e) => handleRemoveFile(file.name, e)}
-                    className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors shrink-0 opacity-60 group-hover:opacity-100"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+            <div className="py-1">
+              {tree.map(node => (
+                <TreeItem key={node.path} node={node} depth={0} onRemove={handleRemoveFile} />
               ))}
             </div>
           </div>
