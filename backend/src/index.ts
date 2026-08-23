@@ -81,6 +81,12 @@ app.use(cors({
   maxAge: 86400, // 24 hours
 }))
 
+// Request logging
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.path}`)
+  next()
+})
+
 app.use(compression())
 app.use(express.json({ limit: '10mb' }))
 
