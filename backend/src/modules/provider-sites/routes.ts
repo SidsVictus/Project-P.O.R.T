@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { requireAuth } from '../auth/middleware'
 import { fetchProviderSites } from './service'
+import { getAllCredentials } from '../credentials/service'
 import { AuthRequest } from '../../shared/types'
 import { Provider } from '../../shared/types'
 
@@ -23,8 +24,20 @@ router.get('/:provider', requireAuth, async (req: AuthRequest, res) => {
 
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
+    const creds = await getAllCredentials(req.userId!)
+    const connected = creds.map((c: any) => c.provider as Provider)
+    const hasEnvSurge = !!process.env.SURGE_TOKEN
+    const providers: Provider[] = [...new Set([...connected, ...(hasEnvSurge ? ['surge'] : [])])]
+
+    if (providers.length === 0) return res.json([])
+
     const results = await Promise.allSettled(
-      VALID_PROVIDERS.map((p) => fetchProviderSites(req.userId!, p))
+      providers.map((p) =>
+        Promise.race([
+          fetchProviderSites(req.userId!, p),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000)),
+        ])
+      )
     )
     const allSites = results
       .filter((r): r is PromiseFulfilledResult<any[]> => r.status === 'fulfilled')
