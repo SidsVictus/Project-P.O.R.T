@@ -12,14 +12,16 @@ router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
     const existingDir = req.body.uploadDir || req.query.uploadDir as string | undefined
     const dir = await ensureUploadDir(existingDir)
     const files = req.files as Express.Multer.File[] | undefined
+    let paths: string[] = []
+    try { paths = JSON.parse(req.body.paths || '[]') } catch {}
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'No files provided' })
     }
 
-    for (const file of files) {
-      const relativePath = file.originalname.replace(/\\/g, '/')
-      await saveFile(dir, relativePath, file.buffer)
+    for (let i = 0; i < files.length; i++) {
+      const relativePath = paths[i] || files[i].originalname.replace(/\\/g, '/')
+      await saveFile(dir, relativePath, files[i].buffer)
     }
 
     const fileNames = await getUploadedFiles(dir)

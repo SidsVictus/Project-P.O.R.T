@@ -30,10 +30,13 @@ class ApiClient {
 
   async uploadFiles(files: File[], existingDir?: string) {
     const formData = new FormData()
+    const paths: string[] = []
     for (const f of files) {
       const relativePath = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
-      formData.append('files', f, relativePath)
+      paths.push(relativePath)
+      formData.append('files', f, f.name)
     }
+    formData.append('paths', JSON.stringify(paths))
     if (existingDir) formData.append('uploadDir', existingDir)
     const headers: Record<string, string> = {}
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
