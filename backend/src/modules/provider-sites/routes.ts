@@ -25,14 +25,13 @@ router.get('/:provider', requireAuth, async (req: AuthRequest, res) => {
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const creds = await getAllCredentials(req.userId!)
-    const connected = creds.map((c: any) => c.provider as Provider)
+    const connected: Provider[] = creds.map((c: any) => c.provider)
     const hasEnvSurge = !!process.env.SURGE_TOKEN
-    const providers: Provider[] = [...new Set([...connected, ...(hasEnvSurge ? ['surge'] : [])])]
-
-    if (providers.length === 0) return res.json([])
+    if (hasEnvSurge && !connected.includes('surge')) connected.push('surge')
+    if (connected.length === 0) return res.json([])
 
     const results = await Promise.allSettled(
-      providers.map((p) =>
+      connected.map((p) =>
         Promise.race([
           fetchProviderSites(req.userId!, p),
           new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000)),
