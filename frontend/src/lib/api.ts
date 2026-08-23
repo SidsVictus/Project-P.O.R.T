@@ -1,3 +1,5 @@
+import { zipSync } from 'fflate'
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 class ApiClient {
@@ -29,14 +31,15 @@ class ApiClient {
   delete<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }) }
 
   async uploadFiles(files: File[], existingDir?: string) {
-    const formData = new FormData()
-    const paths: string[] = []
+    const fileData: Record<string, Uint8Array> = {}
     for (const f of files) {
-      const relativePath = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
-      paths.push(relativePath)
-      formData.append('files', f, f.name)
+      const name = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
+      fileData[name] = new Uint8Array(await f.arrayBuffer())
     }
-    formData.append('paths', JSON.stringify(paths))
+    const zipped = zipSync(fileData, { level: 0 })
+    const blob = new Blob([zipped], { type: 'application/zip' })
+    const formData = new FormData()
+    formData.append('files', blob, 'upload.zip')
     if (existingDir) formData.append('uploadDir', existingDir)
     const headers: Record<string, string> = {}
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
