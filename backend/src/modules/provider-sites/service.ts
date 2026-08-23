@@ -70,13 +70,10 @@ async function fetchSurgeSites(token: string): Promise<ProviderSite[]> {
   const res = await fetch('https://surge.surge.sh/list', {
     headers: { Authorization: `Basic ${auth}` },
   })
-  const text = await res.text()
-  console.log('[Surge API]', res.status, text.slice(0, 500))
   if (!res.ok) throw new Error(`Surge API error: ${res.status}`)
-  const data = JSON.parse(text)
-  const domains = data.projects || data.domains || data || []
-  return (Array.isArray(domains) ? domains : []).map((d: any) => {
-    const domain = typeof d === 'string' ? d : (d.name || d.domain || '')
+  const data = await res.json() as any[]
+  return data.map((d: any) => {
+    const domain = d.domain || ''
     const name = domain.replace('.surge.sh', '')
     return { name, url: `https://${domain}`, provider: 'surge', updatedAt: null }
   })

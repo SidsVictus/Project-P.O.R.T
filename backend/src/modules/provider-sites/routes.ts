@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { requireAuth } from '../auth/middleware'
 import { fetchProviderSites } from './service'
-import { getAllCredentials, getCredential } from '../credentials/service'
+import { getAllCredentials } from '../credentials/service'
 import { AuthRequest } from '../../shared/types'
 import { Provider } from '../../shared/types'
 
@@ -29,13 +29,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     const hasEnvSurge = !!process.env.SURGE_TOKEN
     if (hasEnvSurge && !connected.includes('surge')) connected.push('surge')
 
-    const debug: any = { connected, hasEnvSurge, credCount: creds.length }
-
     if (connected.length === 0) return res.json([])
-
-    const surgeCred = await getCredential(req.userId!, 'surge')
-    debug.surgeCredFound = !!surgeCred
-    debug.surgeTokenLen = surgeCred?.token?.length || 0
 
     const results = await Promise.allSettled(
       connected.map((p) =>
@@ -48,13 +42,8 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     const allSites = results
       .filter((r): r is PromiseFulfilledResult<any[]> => r.status === 'fulfilled')
       .flatMap((r) => r.value)
-    const errors = results
-      .map((r, i) => r.status === 'rejected' ? `${connected[i]}: ${r.reason?.message}` : null)
-      .filter(Boolean)
-    debug.errors = errors
-    debug.siteCount = allSites.length
 
-    res.json({ sites: allSites, debug })
+    res.json(allSites)
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to fetch provider sites' })
   }
