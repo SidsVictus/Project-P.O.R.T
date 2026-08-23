@@ -66,16 +66,17 @@ async function fetchGitHubSites(token: string): Promise<ProviderSite[]> {
 }
 
 async function fetchSurgeSites(token: string): Promise<ProviderSite[]> {
-  const res = await fetch('https://api.surge.sh/v1/domains', {
-    headers: { Authorization: `Bearer ${token}` },
+  const auth = Buffer.from(`token:${token}`).toString('base64')
+  const res = await fetch('https://surge.surge.sh/list', {
+    headers: { Authorization: `Basic ${auth}` },
   })
   if (!res.ok) throw new Error(`Surge API error: ${res.status}`)
   const data = await res.json() as any
-  const domains = data.domains || data || []
+  const domains = data.projects || data.domains || data || []
   return (Array.isArray(domains) ? domains : []).map((d: any) => {
-    const name = typeof d === 'string' ? d.replace('.surge.sh', '') : (d.name || d.domain || '').replace('.surge.sh', '')
-    const url = typeof d === 'string' ? `https://${d}` : `https://${d.name || d.domain}`
-    return { name, url, provider: 'surge', updatedAt: null }
+    const domain = typeof d === 'string' ? d : (d.name || d.domain || '')
+    const name = domain.replace('.surge.sh', '')
+    return { name, url: `https://${domain}`, provider: 'surge', updatedAt: null }
   })
 }
 
