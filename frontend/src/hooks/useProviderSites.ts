@@ -11,8 +11,12 @@ export interface ProviderSite {
 export function useProviderSites() {
   return useQuery<ProviderSite[]>({
     queryKey: ['provider-sites'],
-    queryFn: () => api.get('/api/provider-sites'),
-    retry: false,
+    queryFn: async () => {
+      const result = await api.get<ProviderSite[]>('/api/provider-sites')
+      return Array.isArray(result) ? result : []
+    },
+    retry: 2,
     staleTime: 60_000,
+    refetchOnWindowFocus: true,
   })
 }
