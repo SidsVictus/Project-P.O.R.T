@@ -23,6 +23,8 @@ import analyticsRoutes from './modules/analytics/routes'
 const app = express()
 const server = createServer(app)
 
+app.set('trust proxy', 1)
+
 initSocket(server)
 
 // Security middleware
