@@ -2,6 +2,22 @@ import { zipSync } from 'fflate'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
+const IGNORE_PATTERNS = [
+  /(^|\/)node_modules(\/|$)/,
+  /(^|\/)\.git(\/|$)/,
+  /(^|\/)dist(\/|$)/,
+  /(^|\/)build(\/|$)/,
+  /(^|\/)\.next(\/|$)/,
+  /(^|\/)\.cache(\/|$)/,
+  /(^|\/)coverage(\/|$)/,
+  /\.log$/,
+  /(^|\/)\.DS_Store$/,
+]
+
+export function shouldIgnore(relativePath: string): boolean {
+  return IGNORE_PATTERNS.some(p => p.test(relativePath))
+}
+
 class ApiClient {
   private token: string | null = null
 
@@ -31,8 +47,9 @@ class ApiClient {
   delete<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }) }
 
   async uploadFiles(files: File[], existingDir?: string) {
+    const filtered = files.filter(f => !shouldIgnore((f as any).webkitRelativePath || f.name))
     const fileData: Record<string, Uint8Array> = {}
-    for (const f of files) {
+    for (const f of filtered) {
       const name = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
       fileData[name] = new Uint8Array(await f.arrayBuffer())
     }

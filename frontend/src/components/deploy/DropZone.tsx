@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, X, FolderPlus, Folder, FolderOpen, File, Paperclip } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useDeployStore } from '../../stores/deployStore'
-import { api } from '../../lib/api'
+import { api, shouldIgnore } from '../../lib/api'
 import toast from 'react-hot-toast'
 
 function formatSize(bytes: number): string {
@@ -103,15 +103,17 @@ export function DropZone() {
     if (!files.length) return
     const currentDir = useDeployStore.getState().uploadDir
     const currentFiles = useDeployStore.getState().uploadedFiles
+    const kept = files.filter(f => !shouldIgnore((f as any).webkitRelativePath || f.name))
+    const skipped = files.length - kept.length
     try {
-      toast.loading('Uploading files...', { id: 'upload' })
+      toast.loading(`Zipping ${kept.length} files${skipped ? ` (${skipped} skipped)` : ''}...`, { id: 'upload' })
       const result = await api.uploadFiles(files, currentDir || undefined)
       setUploadDir(result.uploadDir)
       const serverFiles = result.files
       if (serverFiles && serverFiles.length > 0) {
         setUploadedFiles(serverFiles)
       } else {
-        const clientFiles = files.map(f => ({ name: f.webkitRelativePath || f.name, size: f.size }))
+        const clientFiles = kept.map(f => ({ name: f.webkitRelativePath || f.name, size: f.size }))
         const existing = currentDir ? currentFiles : []
         const merged = [...existing]
         for (const cf of clientFiles) {
@@ -119,7 +121,7 @@ export function DropZone() {
         }
         setUploadedFiles(merged)
       }
-      toast.success(`${files.length} file${files.length !== 1 ? 's' : ''} uploaded`, { id: 'upload' })
+      toast.success(`${kept.length} files uploaded${skipped ? ` (${skipped} junk skipped)` : ''}`, { id: 'upload' })
     } catch (err) {
       toast.error('Upload failed', { id: 'upload' })
     }

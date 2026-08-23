@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip'
 import { requireAuth } from '../auth/middleware'
 import { ensureUploadDir, saveFile, deleteFile, getUploadedFiles } from './service'
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } })
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } })
 const router = Router()
 
 router.post('/', requireAuth, upload.single('files'), async (req, res) => {
