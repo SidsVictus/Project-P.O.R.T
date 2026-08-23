@@ -150,7 +150,9 @@ function ChartModal({ onClose }: { onClose: () => void }) {
 export function Dashboard() {
   const navigate = useNavigate()
   const { data: sites, isLoading } = useSites()
-  const { data: providerSites, isLoading: loadingProviders } = useProviderSites()
+  const { data: providerData, isLoading: loadingProviders } = useProviderSites()
+  const providerSites = providerData?.sites || []
+  const providerDebug = providerData?.debug
   const deleteSite = useDeleteSite()
   const [chartOpen, setChartOpen] = useState(false)
 
@@ -302,10 +304,15 @@ export function Dashboard() {
           <div className="space-y-4">
             {[1, 2].map((i) => <div key={i} className="skeleton h-16 w-full" />)}
           </div>
-        ) : !providerSites?.length ? (
+        ) : !providerSites.length ? (
           <div className="text-center py-10 rounded-xl border border-dashed border-white/30">
             <p className="text-sm text-muted-foreground">No existing sites found.</p>
             <p className="text-xs text-muted-foreground mt-1">Connect providers in Settings to see your sites here.</p>
+            {providerDebug && (
+              <pre className="text-[10px] text-left mt-3 p-2 rounded bg-black/10 text-muted-foreground overflow-auto max-h-40">
+                {JSON.stringify(providerDebug, null, 2)}
+              </pre>
+            )}
           </div>
         ) : (
           <div className="space-y-2">

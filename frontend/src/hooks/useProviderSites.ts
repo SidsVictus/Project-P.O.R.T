@@ -8,8 +8,13 @@ export interface ProviderSite {
   updatedAt: string | null
 }
 
+export interface ProviderSitesResponse {
+  sites: ProviderSite[]
+  debug?: any
+}
+
 export function useProviderSites() {
-  return useQuery<ProviderSite[]>({
+  return useQuery<ProviderSitesResponse>({
     queryKey: ['provider-sites'],
     queryFn: () => api.get('/api/provider-sites'),
     retry: false,
