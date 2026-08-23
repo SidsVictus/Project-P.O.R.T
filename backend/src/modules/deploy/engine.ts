@@ -70,11 +70,13 @@ export async function executeDeploy(
       emitLog?.(`Deployment failed: ${result.error}`)
       emitStatus?.('failed')
       await updateStatus('failed', undefined, result.logs, result.error)
+      await supabaseAdmin.from(SITES_TABLE).update({ status: 'failed' }).eq('id', siteId)
       await sendNotification(userId, 'failed', siteName, undefined, result.error)
     }
   } catch (error: any) {
     logger.error({ error, deploymentId }, 'Deployment failed')
     await updateStatus('failed', undefined, '', error.message)
+    await supabaseAdmin.from(SITES_TABLE).update({ status: 'failed' }).eq('id', siteId)
     emitLog?.(`Error: ${error.message}`)
     emitStatus?.('failed')
     await sendNotification(userId, 'failed', siteName, undefined, error.message)

@@ -60,7 +60,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
         user_id: req.userId!,
         name: parsed.siteName,
         provider: parsed.provider,
-        status: 'active',
+        status: 'pending',
       })
       .select()
       .single()
