@@ -1,9 +1,5 @@
 import { getCredential } from '../credentials/service'
 import { Provider } from '../../shared/types'
-import { spawn } from 'child_process'
-import os from 'os'
-import path from 'path'
-import fs from 'fs'
 
 export interface ProviderSite {
   name: string
@@ -70,35 +66,17 @@ async function fetchGitHubSites(token: string): Promise<ProviderSite[]> {
 }
 
 async function fetchSurgeSites(token: string): Promise<ProviderSite[]> {
-  const netrcPath = path.join(os.tmpdir(), `.netrc-${Date.now()}`)
-  fs.writeFileSync(netrcPath, `machine surge.sh\nlogin token\npassword ${token}\n`)
-  try {
-    return await new Promise((resolve, reject) => {
-      const child = spawn('npx', ['surge', 'list'], {
-        env: { ...process.env, FORCE_COLOR: '0', NETRC: netrcPath },
-        shell: false,
-      })
-      let stdout = ''
-      let stderr = ''
-      child.stdout?.on('data', (d) => { stdout += d.toString() })
-      child.stderr?.on('data', (d) => { stderr += d.toString() })
-      child.on('close', () => {
-        const output = stdout + stderr
-        const sites: ProviderSite[] = []
-        const regex = /https?:\/\/[\w-]+\.surge\.sh/g
-        let match
-        while ((match = regex.exec(output)) !== null) {
-          const url = match[0]
-          const name = url.replace('https://', '').replace('.surge.sh', '')
-          sites.push({ name, url, provider: 'surge', updatedAt: null })
-        }
-        resolve(sites)
-      })
-      child.on('error', (err) => reject(err))
-    })
-  } finally {
-    try { fs.unlinkSync(netrcPath) } catch {}
-  }
+  const res = await fetch('https://api.surge.sh/v1/domains', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error(`Surge API error: ${res.status}`)
+  const data = await res.json() as any
+  const domains = data.domains || data || []
+  return (Array.isArray(domains) ? domains : []).map((d: any) => {
+    const name = typeof d === 'string' ? d.replace('.surge.sh', '') : (d.name || d.domain || '').replace('.surge.sh', '')
+    const url = typeof d === 'string' ? `https://${d}` : `https://${d.name || d.domain}`
+    return { name, url, provider: 'surge', updatedAt: null }
+  })
 }
 
 async function fetchCloudflareSites(token: string): Promise<ProviderSite[]> {
