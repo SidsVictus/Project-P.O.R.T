@@ -24,8 +24,9 @@ router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
 
     const fileNames = await getUploadedFiles(dir)
     res.json({ uploadDir: dir, fileCount: fileNames.length, files: fileNames })
-  } catch (error) {
-    res.status(500).json({ error: 'Upload failed' })
+  } catch (error: any) {
+    console.error('Upload error:', error)
+    res.status(500).json({ error: error.message || 'Upload failed' })
   }
 })
 
