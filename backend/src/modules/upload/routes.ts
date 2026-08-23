@@ -1,25 +1,33 @@
 import { Router } from 'express'
 import multer from 'multer'
+import AdmZip from 'adm-zip'
+import path from 'path'
 import { requireAuth } from '../auth/middleware'
 import { ensureUploadDir, saveFile, deleteFile, getUploadedFiles } from './service'
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } })
 const router = Router()
 
-router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
+router.post('/', requireAuth, upload.single('file'), async (req, res) => {
   try {
     const existingDir = req.body.uploadDir || req.query.uploadDir as string | undefined
     const dir = await ensureUploadDir(existingDir)
-    const files = req.files as any[]
+    const file = req.file
 
-    let paths: string[] = []
-    try {
-      paths = JSON.parse((req.query.paths as string) || '[]')
-    } catch {}
+    if (!file) {
+      return res.status(400).json({ error: 'No file provided' })
+    }
 
-    for (let i = 0; i < files.length; i++) {
-      const relativePath = paths[i] || files[i].originalname.replace(/\\/g, '/')
-      await saveFile(dir, relativePath, files[i].buffer)
+    if (file.originalname.endsWith('.zip')) {
+      const zip = new AdmZip(file.buffer)
+      const entries = zip.getEntries()
+      for (const entry of entries) {
+        if (entry.isDirectory) continue
+        const relativePath = entry.entryName.replace(/\\/g, '/')
+        await saveFile(dir, relativePath, entry.getData())
+      }
+    } else {
+      await saveFile(dir, file.originalname.replace(/\\/g, '/'), file.buffer)
     }
 
     const fileNames = await getUploadedFiles(dir)

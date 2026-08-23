@@ -1,3 +1,5 @@
+import { downloadZip } from 'client-zip'
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 class ApiClient {
@@ -29,14 +31,17 @@ class ApiClient {
   delete<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }) }
 
   async uploadFiles(files: File[], existingDir?: string) {
+    const filesForZip = files.map(f => ({
+      name: ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/'),
+      input: f,
+    }))
+    const zipBlob = await downloadZip(filesForZip).blob()
     const formData = new FormData()
-    const paths = files.map(f => ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/'))
-    files.forEach(f => formData.append('files', f))
+    formData.append('file', zipBlob, 'upload.zip')
     if (existingDir) formData.append('uploadDir', existingDir)
     const headers: Record<string, string> = {}
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
-    const query = `paths=${encodeURIComponent(JSON.stringify(paths))}`
-    const res = await fetch(`${API_URL}/api/upload?${query}`, { method: 'POST', headers, body: formData })
+    const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers, body: formData })
     if (!res.ok) throw new Error('Upload failed')
     return res.json()
   }

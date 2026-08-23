@@ -28,6 +28,7 @@
     "@xterm/xterm": "^5.5.0",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
+    "client-zip": "^2.5.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.15.0",

@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.0",
+    "@types/adm-zip": "^0.5.8",
     "@types/jsonwebtoken": "^9.0.10",
-    "archiver": "^7.0.0",
+    "adm-zip": "^0.6.0",
+    "archiver": "^7.0.1",
     "bullmq": "^5.30.0",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
@@ -35,7 +37,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.3",
+    "@types/archiver": "^6.0.4",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
     "@types/crypto-js": "^4.2.2",
