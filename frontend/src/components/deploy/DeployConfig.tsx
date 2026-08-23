@@ -5,14 +5,41 @@ import { Label } from '../ui/label'
 import { Switch } from '../ui/switch'
 import { Calendar } from 'lucide-react'
 import { useRef } from 'react'
+import { useTemplates } from '../../hooks/useTemplates'
 
 export function DeployConfig() {
-  const { siteName, setSiteName, hostingEmail, setHostingEmail, scheduledAt, setScheduledAt, showTerminal, setShowTerminal } = useDeployStore()
+  const { siteName, setSiteName, hostingEmail, setHostingEmail, scheduledAt, setScheduledAt, showTerminal, setShowTerminal, provider, setProvider } = useDeployStore()
   const { user } = useAuthStore()
   const dateRef = useRef<HTMLInputElement>(null)
+  const { data: templates } = useTemplates()
+  const templateList = (templates as any[]) || []
+
+  const applyTemplate = (templateId: string) => {
+    const t = templateList.find((t: any) => t.id === templateId)
+    if (t) {
+      setProvider(t.provider)
+      if (t.config?.hostingEmail) setHostingEmail(t.config.hostingEmail)
+    }
+  }
 
   return (
     <div className="space-y-6">
+      {templateList.length > 0 && (
+        <div className="space-y-2">
+          <Label>Apply Template <span className="text-xs text-muted-foreground">(optional)</span></Label>
+          <select
+            onChange={(e) => { if (e.target.value) applyTemplate(e.target.value) }}
+            defaultValue=""
+            className="w-full h-10 rounded-lg border border-border bg-secondary/50 px-3 text-sm"
+          >
+            <option value="" disabled>Choose a template...</option>
+            {templateList.map((t: any) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="siteName">
           Site Name <span className="text-destructive">*</span>

@@ -12,7 +12,7 @@ interface DeployParams {
 }
 
 export function useDeploy() {
-  const { addLog, setDeployResult, setDeploying } = useDeployStore()
+  const { addLog, setCurrentDeploymentId, setDeploying } = useDeployStore()
 
   return useMutation({
     mutationFn: async (params: DeployParams) => {
@@ -22,13 +22,13 @@ export function useDeploy() {
       return result
     },
     onSuccess: (data: any) => {
-      const url = data?.deployment?.deploy_url || data?.site?.url
-      setDeployResult({ url, success: true })
-      addLog(`Deployment successful!`)
-      setDeploying(false)
+      const deploymentId = data?.deployment?.id
+      if (deploymentId) {
+        setCurrentDeploymentId(deploymentId)
+      }
     },
     onError: (error: Error) => {
-      setDeployResult({ success: false })
+      useDeployStore.getState().setDeployResult({ success: false })
       addLog(`Error: ${error.message}`)
       setDeploying(false)
     },

@@ -13,12 +13,14 @@ export function Templates() {
   const deleteTemplate = useDeleteTemplate()
   const [name, setName] = useState('')
   const [provider, setProvider] = useState('surge')
+  const [email, setEmail] = useState('')
 
   const handleCreate = async () => {
     if (!name.trim()) return toast.error('Enter template name')
-    await createTemplate.mutateAsync({ name, provider, config: {} })
+    await createTemplate.mutateAsync({ name, provider, config: { hostingEmail: email || undefined } })
     toast.success('Template created')
     setName('')
+    setEmail('')
   }
 
   return (
@@ -43,6 +45,10 @@ export function Templates() {
               </select>
             </div>
           </div>
+          <div className="space-y-2">
+            <Label>Hosting Email <span className="text-xs text-muted-foreground">(optional)</span></Label>
+            <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
           <Button onClick={handleCreate} disabled={!name.trim()}>
             <Plus className="h-4 w-4 mr-2" /> Save Template
           </Button>
@@ -60,6 +66,7 @@ export function Templates() {
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium">{t.name}</span>
                   <span className="text-xs text-muted-foreground">{PROVIDERS.find((p) => p.id === t.provider)?.name}</span>
+                  {t.config?.hostingEmail && <span className="text-xs text-muted-foreground">{t.config.hostingEmail}</span>}
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { deleteTemplate.mutate(t.id); toast.success('Template deleted') }}>
                   <Trash2 className="h-4 w-4 text-destructive" />

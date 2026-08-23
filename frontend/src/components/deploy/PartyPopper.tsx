@@ -22,8 +22,8 @@ export function PartyPopper() {
   if (!deployResult?.success) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="glass rounded-2xl p-8 max-w-md w-full mx-4 text-center space-y-6 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      <div className="glass rounded-2xl p-8 max-w-md w-full mx-4 text-center space-y-6 animate-fade-in pointer-events-auto">
         <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto glow">
           <PartyPopperIcon className="h-10 w-10 text-white" />
         </div>
@@ -41,7 +41,7 @@ export function PartyPopper() {
             {deployResult.url}
           </a>
         )}
-        <Button onClick={reset} className="w-full">Deploy Another Site</Button>
+        <Button onClick={reset} className="w-full">Letssss gooooo!!</Button>
       </div>
     </div>
   )

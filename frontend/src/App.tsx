@@ -11,6 +11,7 @@ import { Templates } from './routes/Templates'
 import { Schedules } from './routes/Schedules'
 import { Webhooks } from './routes/Webhooks'
 import { Analytics } from './routes/Analytics'
+import { Help } from './routes/Help'
 
 export default function App() {
   const { init, initialized } = useAuthStore()
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/webhooks" element={<Webhooks />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

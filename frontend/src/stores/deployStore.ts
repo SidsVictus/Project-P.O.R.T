@@ -15,6 +15,7 @@ interface DeployState {
   scheduledAt: string
   showTerminal: boolean
   deploying: boolean
+  currentDeploymentId: string | null
   deployLogs: string[]
   deployResult: { url?: string; success: boolean } | null
   setUploadDir: (dir: string | null) => void
@@ -26,6 +27,7 @@ interface DeployState {
   setScheduledAt: (t: string) => void
   setShowTerminal: (show: boolean) => void
   setDeploying: (d: boolean) => void
+  setCurrentDeploymentId: (id: string | null) => void
   addLog: (log: string) => void
   setDeployResult: (r: { url?: string; success: boolean } | null) => void
   reset: () => void
@@ -40,6 +42,7 @@ const initialState = {
   scheduledAt: '',
   showTerminal: false,
   deploying: false,
+  currentDeploymentId: null as string | null,
   deployLogs: [] as string[],
   deployResult: null as { url?: string; success: boolean } | null,
 }
@@ -55,6 +58,7 @@ export const useDeployStore = create<DeployState>((set) => ({
   setScheduledAt: (t) => set({ scheduledAt: t }),
   setShowTerminal: (show) => set({ showTerminal: show }),
   setDeploying: (d) => set({ deploying: d }),
+  setCurrentDeploymentId: (id) => set({ currentDeploymentId: id }),
   addLog: (log) => set((s) => ({ deployLogs: [...s.deployLogs, log] })),
   setDeployResult: (r) => set({ deployResult: r }),
   reset: () => set(initialState),

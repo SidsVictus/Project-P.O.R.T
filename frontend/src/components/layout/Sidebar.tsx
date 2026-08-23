@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Rocket, Clock, FileCode, Settings, Webhook, BarChart3, ChevronLeft, LogOut } from 'lucide-react'
+import { LayoutDashboard, Rocket, Clock, FileCode, Settings, Webhook, BarChart3, HelpCircle, ChevronLeft, LogOut } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useUIStore } from '../../stores/uiStore'
 import { useAuthStore } from '../../stores/authStore'
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/webhooks', icon: Webhook, label: 'Webhooks' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/help', icon: HelpCircle, label: 'Help' },
 ]
 
 export function Sidebar() {

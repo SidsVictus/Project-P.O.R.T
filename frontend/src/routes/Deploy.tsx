@@ -12,10 +12,10 @@ import toast from 'react-hot-toast'
 
 export function Deploy() {
   const navigate = useNavigate()
-  const { uploadDir, siteName, hostingEmail, scheduledAt, deployResult, deploying } = useDeployStore()
+  const { uploadDir, siteName, hostingEmail, scheduledAt, deployResult, deploying, currentDeploymentId } = useDeployStore()
   const deployMutation = useDeploy()
 
-  useWebSocket()
+  useWebSocket(currentDeploymentId || undefined)
 
   const handleDeploy = async () => {
     if (!uploadDir) return toast.error('Upload files first')

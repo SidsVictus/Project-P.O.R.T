@@ -103,7 +103,8 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
         parsed.siteName,
         parsed.uploadDir,
         parsed.hostingEmail,
-        (msg) => emitDeployLog(req.userId!, deployment.id, msg)
+        (msg) => emitDeployLog(req.userId!, deployment.id, msg),
+        (status) => emitDeployStatus(req.userId!, deployment.id, status)
       )
     }
 
