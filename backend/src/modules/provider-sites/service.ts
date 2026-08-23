@@ -1,6 +1,9 @@
 import { getCredential } from '../credentials/service'
 import { Provider } from '../../shared/types'
 import { spawn } from 'child_process'
+import os from 'os'
+import path from 'path'
+import fs from 'fs'
 
 export interface ProviderSite {
   name: string
@@ -66,30 +69,36 @@ async function fetchGitHubSites(token: string): Promise<ProviderSite[]> {
   return sites
 }
 
-async function fetchSurgeSites(): Promise<ProviderSite[]> {
-  return new Promise((resolve, reject) => {
-    const child = spawn('npx', ['surge', 'list'], {
-      env: { ...process.env, FORCE_COLOR: '0' },
-      shell: false,
+async function fetchSurgeSites(token: string): Promise<ProviderSite[]> {
+  const netrcPath = path.join(os.tmpdir(), `.netrc-${Date.now()}`)
+  fs.writeFileSync(netrcPath, `machine surge.sh\nlogin token\npassword ${token}\n`)
+  try {
+    return await new Promise((resolve, reject) => {
+      const child = spawn('npx', ['surge', 'list'], {
+        env: { ...process.env, FORCE_COLOR: '0', NETRC: netrcPath },
+        shell: false,
+      })
+      let stdout = ''
+      let stderr = ''
+      child.stdout?.on('data', (d) => { stdout += d.toString() })
+      child.stderr?.on('data', (d) => { stderr += d.toString() })
+      child.on('close', () => {
+        const output = stdout + stderr
+        const sites: ProviderSite[] = []
+        const regex = /https?:\/\/[\w-]+\.surge\.sh/g
+        let match
+        while ((match = regex.exec(output)) !== null) {
+          const url = match[0]
+          const name = url.replace('https://', '').replace('.surge.sh', '')
+          sites.push({ name, url, provider: 'surge', updatedAt: null })
+        }
+        resolve(sites)
+      })
+      child.on('error', (err) => reject(err))
     })
-    let stdout = ''
-    let stderr = ''
-    child.stdout?.on('data', (d) => { stdout += d.toString() })
-    child.stderr?.on('data', (d) => { stderr += d.toString() })
-    child.on('close', () => {
-      const output = stdout + stderr
-      const sites: ProviderSite[] = []
-      const regex = /https?:\/\/[\w-]+\.surge\.sh/g
-      let match
-      while ((match = regex.exec(output)) !== null) {
-        const url = match[0]
-        const name = url.replace('https://', '').replace('.surge.sh', '')
-        sites.push({ name, url, provider: 'surge', updatedAt: null })
-      }
-      resolve(sites)
-    })
-    child.on('error', (err) => reject(err))
-  })
+  } finally {
+    try { fs.unlinkSync(netrcPath) } catch {}
+  }
 }
 
 async function fetchCloudflareSites(token: string): Promise<ProviderSite[]> {
@@ -138,7 +147,7 @@ export async function fetchProviderSites(
     const cred = await getCredential(userId, 'surge')
     const token = cred?.token || process.env.SURGE_TOKEN
     if (!token) throw new Error('Surge not connected. Add your Surge token in Settings.')
-    return fetchSurgeSites()
+    return fetchSurgeSites(token)
   }
 
   const cred = await getCredential(userId, provider)

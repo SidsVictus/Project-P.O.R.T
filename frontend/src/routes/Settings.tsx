@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ProviderIcon } from '../components/ui/ProviderIcon'
 
 const PROVIDER_AUTH: Record<string, { fields: string[] }> = {
-  surge: { fields: ['email', 'password'] },
+  surge: { fields: ['email', 'token'] },
   netlify: { fields: ['token'] },
   vercel: { fields: ['token'] },
   cloudflare: { fields: ['token'] },
@@ -23,7 +23,7 @@ export function Settings() {
   const [provider, setProvider] = useState('surge')
   const [token, setToken] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [showToken, setShowToken] = useState(false)
 
   const fields = PROVIDER_AUTH[provider]?.fields || ['token']
 
@@ -37,14 +37,12 @@ export function Settings() {
       const payload: any = { provider }
       if (fields.includes('token')) payload.token = token
       if (fields.includes('email')) payload.email = email
-      if (fields.includes('password')) payload.password = password
       return api.post('/api/credentials', payload)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['credentials'] })
       setToken('')
       setEmail('')
-      setPassword('')
       toast.success('Credential stored securely')
     },
     onError: () => toast.error('Failed to store credential'),
@@ -61,7 +59,6 @@ export function Settings() {
   const isDisabled = fields.every((f) => {
     if (f === 'token') return !token
     if (f === 'email') return !email
-    if (f === 'password') return !password
     return true
   })
 
@@ -78,7 +75,7 @@ export function Settings() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Provider</Label>
-              <select value={provider} onChange={(e) => { setProvider(e.target.value); setToken(''); setEmail(''); setPassword('') }} className="w-full h-10 rounded-lg border border-border bg-secondary px-3 text-sm">
+              <select value={provider} onChange={(e) => { setProvider(e.target.value); setToken(''); setEmail('') }} className="w-full h-10 rounded-lg border border-border bg-secondary px-3 text-sm">
                 {PROVIDERS.filter((p) => p.id !== 'custom').map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -87,19 +84,19 @@ export function Settings() {
             {fields.includes('token') && (
               <div className="space-y-2">
                 <Label>API Token</Label>
-                <Input type="password" placeholder="your-api-token" value={token} onChange={(e) => setToken(e.target.value)} />
+                <div className="relative">
+                  <Input type={showToken ? 'text' : 'password'} placeholder="your-api-token" value={token} onChange={(e) => setToken(e.target.value)} className="pr-10" />
+                  <button type="button" onClick={() => setShowToken(!showToken)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-secondary/80 transition-colors">
+                    {showToken ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                </div>
               </div>
             )}
             {fields.includes('email') && (
               <div className="space-y-2">
                 <Label>Email</Label>
                 <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-            )}
-            {fields.includes('password') && (
-              <div className="space-y-2">
-                <Label>Password</Label>
-                <Input type="password" placeholder="your-password" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
             )}
           </div>
@@ -121,7 +118,7 @@ export function Settings() {
                   <ProviderIcon provider={cred.provider} size="sm" />
                   <div>
                     <p className="text-sm font-medium">{PROVIDERS.find((p) => p.id === cred.provider)?.name}</p>
-                    <p className="text-xs text-muted-foreground">{cred.email || 'API token stored'}</p>
+                    <p className="text-xs text-muted-foreground">{cred.email || 'Token stored'}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(cred.provider)}>
