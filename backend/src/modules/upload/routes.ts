@@ -6,15 +6,11 @@ import { ensureUploadDir, saveFile, deleteFile, getUploadedFiles } from './servi
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } })
 const router = Router()
 
-router.post('/', requireAuth, upload.fields([
-  { name: 'files', maxCount: 500 },
-  { name: 'paths', maxCount: 1 },
-  { name: 'uploadDir', maxCount: 1 }
-]), async (req, res) => {
+router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
   try {
     const existingDir = req.body.uploadDir || req.query.uploadDir as string | undefined
     const dir = await ensureUploadDir(existingDir)
-    const files = (req.files as any)?.files || []
+    const files = req.files as any[]
 
     let paths: string[] = []
     try {
