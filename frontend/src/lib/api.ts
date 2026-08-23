@@ -30,14 +30,13 @@ class ApiClient {
 
   async uploadFiles(files: File[], existingDir?: string) {
     const formData = new FormData()
-    files.forEach(f => {
-      const relativePath = ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/')
-      formData.append('files', new File([f], relativePath, { type: f.type }))
-    })
+    const paths = files.map(f => ((f as any).webkitRelativePath || f.name).replace(/\\/g, '/'))
+    files.forEach(f => formData.append('files', f))
     if (existingDir) formData.append('uploadDir', existingDir)
     const headers: Record<string, string> = {}
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
-    const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers, body: formData })
+    const query = `paths=${encodeURIComponent(JSON.stringify(paths))}`
+    const res = await fetch(`${API_URL}/api/upload?${query}`, { method: 'POST', headers, body: formData })
     if (!res.ok) throw new Error('Upload failed')
     return res.json()
   }
