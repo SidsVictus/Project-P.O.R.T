@@ -39,7 +39,7 @@ class ApiClient {
     const zipped = zipSync(fileData, { level: 0 })
     const blob = new Blob([zipped], { type: 'application/zip' })
     const formData = new FormData()
-    formData.append('file', blob, 'upload.zip')
+    formData.append('files', blob, 'upload.zip')
     if (existingDir) formData.append('uploadDir', existingDir)
     const headers: Record<string, string> = {}
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
