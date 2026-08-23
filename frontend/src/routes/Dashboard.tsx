@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ExternalLink, TrendingUp, X, ArrowUpRight, RotateCcw, Trash2, Clock, Globe } from 'lucide-react'
+import { Plus, ExternalLink, TrendingUp, X, ArrowUpRight, RotateCcw, Trash2, Clock, Globe, FolderOpen } from 'lucide-react'
 import { useSites, useDeleteSite } from '../hooks/useSites'
+import { useProviderSites, ProviderSite } from '../hooks/useProviderSites'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { formatDate, PROVIDERS } from '../lib/utils'
@@ -149,6 +150,7 @@ function ChartModal({ onClose }: { onClose: () => void }) {
 export function Dashboard() {
   const navigate = useNavigate()
   const { data: sites, isLoading } = useSites()
+  const { data: providerSites, isLoading: loadingProviders } = useProviderSites()
   const deleteSite = useDeleteSite()
   const [chartOpen, setChartOpen] = useState(false)
 
@@ -280,6 +282,56 @@ export function Dashboard() {
               })}
             </div>
           )}
+      </div>
+
+      {/* Existing Sites from Providers */}
+      <div className="pl-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-muted-foreground" />
+              Existing Sites
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Sites from your hosting accounts (not deployed through P.O.R.T)
+            </p>
+          </div>
+        </div>
+
+        {loadingProviders ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => <div key={i} className="skeleton h-16 w-full" />)}
+          </div>
+        ) : !providerSites?.length ? (
+          <div className="text-center py-10 rounded-xl border border-dashed border-white/30">
+            <p className="text-sm text-muted-foreground">No existing sites found.</p>
+            <p className="text-xs text-muted-foreground mt-1">Connect providers in Settings to see your sites here.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {providerSites.map((site, i) => {
+              const provider = PROVIDERS.find((p) => p.id === site.provider)
+              return (
+                <motion.div key={`${site.provider}-${site.name}`}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/20 hover:bg-white/40 backdrop-blur-sm border border-white/20 transition-all duration-200"
+                >
+                  <ProviderIcon provider={site.provider} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{site.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{provider?.name}</p>
+                  </div>
+                  {site.url && (
+                    <a href={site.url} target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline flex items-center gap-1 font-mono shrink-0">
+                      <ArrowUpRight className="h-3 w-3" />Visit
+                    </a>
+                  )}
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
