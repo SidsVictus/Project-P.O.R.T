@@ -72,13 +72,25 @@ app.use(helmet({
   frameguard: { action: 'deny' },
 }))
 
-// CORS - restrict to frontend origin
+// CORS - allow both 5173 and 5174 for local dev
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  env.FRONTEND_URL
+].filter(Boolean)
+
 app.use(cors({
-  origin: env.FRONTEND_URL,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  maxAge: 86400, // 24 hours
+  maxAge: 86400,
 }))
 
 // Request logging
