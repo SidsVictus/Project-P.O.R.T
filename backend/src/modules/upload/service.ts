@@ -67,7 +67,9 @@ export async function getUploadedFiles(uploadDir: string): Promise<UploadedFileI
   }
   try {
     await walk(uploadDir)
-  } catch {}
+  } catch (err: any) {
+    console.error('getUploadedFiles walk error:', err.message)
+  }
   return files
 }
 

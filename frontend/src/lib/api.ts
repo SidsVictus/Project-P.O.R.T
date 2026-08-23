@@ -45,7 +45,7 @@ class ApiClient {
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`
     const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers, body: formData })
     if (!res.ok) throw new Error('Upload failed')
-    return res.json()
+    return await res.json()
   }
 
   async deleteUploadFile(uploadDir: string, filePath: string) {

@@ -31,6 +31,10 @@ router.post('/', requireAuth, upload.single('files'), async (req, res) => {
     }
 
     const fileNames = await getUploadedFiles(dir)
+    console.log(`Upload complete: ${fileNames.length} files extracted to ${dir}`)
+    if (fileNames.length > 0) {
+      console.log('Files:', fileNames.map(f => f.name).join(', '))
+    }
     res.json({ uploadDir: dir, fileCount: fileNames.length, files: fileNames })
   } catch (error: any) {
     console.error('Upload error:', error.message, error.stack)
