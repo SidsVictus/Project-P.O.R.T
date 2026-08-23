@@ -10,6 +10,27 @@ export interface UploadedFileInfo {
   size: number
 }
 
+/**
+ * Validates that a relative path doesn't escape the base directory
+ * Prevents path traversal attacks (e.g., ../../etc/passwd)
+ */
+function validatePath(baseDir: string, relativePath: string): string {
+  const resolvedBase = path.resolve(baseDir)
+  const resolvedPath = path.resolve(baseDir, relativePath)
+  
+  // Ensure the resolved path is within the base directory
+  if (!resolvedPath.startsWith(resolvedBase)) {
+    throw new Error('Path traversal attempt detected')
+  }
+  
+  // Additional check: no null bytes, no absolute paths
+  if (relativePath.includes('\0') || path.isAbsolute(relativePath)) {
+    throw new Error('Invalid path')
+  }
+  
+  return resolvedPath
+}
+
 export async function ensureUploadDir(existingDir?: string): Promise<string> {
   if (existingDir) {
     await fs.mkdir(existingDir, { recursive: true })
@@ -22,7 +43,8 @@ export async function ensureUploadDir(existingDir?: string): Promise<string> {
 }
 
 export async function saveFile(uploadDir: string, relativePath: string, buffer: Buffer): Promise<string> {
-  const fullPath = path.join(uploadDir, relativePath)
+  // Validate path to prevent traversal
+  const fullPath = validatePath(uploadDir, relativePath)
   const dir = path.dirname(fullPath)
   await fs.mkdir(dir, { recursive: true })
   await fs.writeFile(fullPath, buffer)
@@ -50,7 +72,7 @@ export async function getUploadedFiles(uploadDir: string): Promise<UploadedFileI
 }
 
 export async function deleteFile(uploadDir: string, relativePath: string): Promise<void> {
-  const fullPath = path.join(uploadDir, relativePath)
+  const fullPath = validatePath(uploadDir, relativePath)
   await fs.rm(fullPath, { force: true })
 }
 

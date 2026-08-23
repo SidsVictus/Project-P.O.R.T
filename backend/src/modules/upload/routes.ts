@@ -14,7 +14,7 @@ router.post('/', requireAuth, upload.array('files', 500), async (req, res) => {
 
     let paths: string[] = []
     try {
-      paths = JSON.parse(req.body.paths || '[]')
+      paths = JSON.parse((req.headers['x-file-paths'] as string) || '[]')
     } catch {}
 
     for (let i = 0; i < files.length; i++) {

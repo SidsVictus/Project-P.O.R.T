@@ -1,9 +1,6 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import { getCredential } from '../../credentials/service'
 import { ProviderDeployResult } from '../../../shared/types'
-
-const execAsync = promisify(exec)
+import { runDeployCommand, sanitizeSiteName, validateUploadDir } from '../secure-deploy'
 
 export async function deployToNetlify(
   userId: string,
@@ -13,17 +10,31 @@ export async function deployToNetlify(
   const cred = await getCredential(userId, 'netlify')
   const token = cred?.token || process.env.NETLIFY_AUTH_TOKEN
 
-  const commands = [
-    token ? `NETLIFY_AUTH_TOKEN=${token}` : '',
-    `npx netlify-cli deploy --dir=${uploadDir} --prod --site-name=${siteName}`,
-  ].filter(Boolean).join(' ')
-
-  try {
-    const { stdout, stderr } = await execAsync(commands, { timeout: 180000, env: { ...process.env, FORCE_COLOR: '0' } })
-    const output = stdout + stderr
-    const urlMatch = output.match(/https?:\/\/[^\s]+\.netlify\.app/)
-    return { success: true, url: urlMatch?.[0], logs: output }
-  } catch (error: any) {
-    return { success: false, logs: error.stdout || '', error: error.message }
+  if (!token) {
+    return { success: false, logs: '', error: 'Netlify token required. Add it in Settings > Credentials.' }
   }
+
+  // Validate and sanitize inputs
+  const safeSiteName = sanitizeSiteName(siteName)
+  const safeUploadDir = validateUploadDir(uploadDir, process.cwd())
+
+  // Use secure spawn with array arguments - no shell interpolation
+  const result = await runDeployCommand('npx', [
+    'netlify-cli',
+    'deploy',
+    '--dir', safeUploadDir,
+    '--prod',
+    '--site-name', safeSiteName,
+  ], {
+    cwd: safeUploadDir,
+    env: { NETLIFY_AUTH_TOKEN: token },
+    timeout: 180000,
+  })
+
+  if (!result.success) {
+    return result
+  }
+
+  const urlMatch = result.logs.match(/https?:\/\/[^\s]+\.netlify\.app/)
+  return { success: true, url: urlMatch?.[0], logs: result.logs }
 }

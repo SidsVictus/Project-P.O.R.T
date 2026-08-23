@@ -1,11 +1,8 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import fs from 'fs/promises'
 import path from 'path'
 import { getCredential } from '../../credentials/service'
 import { ProviderDeployResult } from '../../../shared/types'
-
-const execAsync = promisify(exec)
+import { runDeployCommand, sanitizeSiteName, validateUploadDir, validateNoShellMetacharacters } from '../secure-deploy'
 
 export async function deployToGitHubPages(
   userId: string,
@@ -19,35 +16,58 @@ export async function deployToGitHubPages(
     return { success: false, logs: '', error: 'GitHub token required. Add it in Settings > Credentials.' }
   }
 
-  const repoName = `port-${siteName}`
-
-  const commands = [
-    `git init`,
-    `git config user.email "deploy@port.app"`,
-    `git config user.name "P.O.R.T"`,
-    `git add -A`,
-    `git commit -m "Deploy via P.O.R.T"`,
-    `git branch -M gh-pages`,
-    `git remote add origin https://${token}@github.com/${cred?.email || 'user'}/${repoName}.git`,
-    `git push -f origin gh-pages`,
-  ].join(' && ')
-
-  try {
-    await execAsync(`gh repo create ${repoName} --public --source=. --push`, {
-      timeout: 60000,
-      cwd: uploadDir,
-      env: { ...process.env, GITHUB_TOKEN: token, FORCE_COLOR: '0' },
-    }).catch(() => {})
-
-    const { stdout, stderr } = await execAsync(commands, {
-      timeout: 120000,
-      cwd: uploadDir,
-      env: { ...process.env, FORCE_COLOR: '0' },
-    })
-    const output = stdout + stderr
-    const url = `https://${cred?.email?.split('@')[0] || 'user'}.github.io/${repoName}`
-    return { success: true, url, logs: output }
-  } catch (error: any) {
-    return { success: false, logs: error.stdout || '', error: error.message }
+  // Validate and sanitize inputs
+  const safeSiteName = sanitizeSiteName(siteName)
+  const safeUploadDir = validateUploadDir(uploadDir, process.cwd())
+  
+  // Validate email doesn't contain shell metacharacters
+  if (cred?.email) {
+    validateNoShellMetacharacters(cred.email, 'GitHub email')
   }
+
+  const repoName = `port-${safeSiteName}`
+  const githubUser = cred?.email?.split('@')[0] || 'user'
+
+  // Use secure spawn with array arguments - no shell interpolation
+  // First create repo
+  const createResult = await runDeployCommand('gh', [
+    'repo', 'create', repoName,
+    '--public',
+    '--source=.',
+    '--push',
+  ], {
+    cwd: safeUploadDir,
+    env: { GITHUB_TOKEN: token, FORCE_COLOR: '0' },
+    timeout: 60000,
+  })
+
+  // Ignore create failure (repo might exist)
+
+  // Initialize git and push
+  const commands = [
+    ['git', 'init'],
+    ['git', 'config', 'user.email', 'deploy@port.app'],
+    ['git', 'config', 'user.name', 'P.O.R.T'],
+    ['git', 'add', '-A'],
+    ['git', 'commit', '-m', 'Deploy via P.O.R.T'],
+    ['git', 'branch', '-M', 'gh-pages'],
+    ['git', 'remote', 'add', 'origin', `https://${token}@github.com/${githubUser}/${repoName}.git`],
+    ['git', 'push', '-f', 'origin', 'gh-pages'],
+  ]
+
+  let allOutput = ''
+  for (const [cmd, ...args] of commands) {
+    const result = await runDeployCommand(cmd, args, {
+      cwd: safeUploadDir,
+      env: { FORCE_COLOR: '0' },
+      timeout: 120000,
+    })
+    allOutput += result.logs
+    if (!result.success) {
+      return { success: false, logs: allOutput, error: result.error }
+    }
+  }
+
+  const url = `https://${githubUser}.github.io/${repoName}`
+  return { success: true, url, logs: allOutput }
 }

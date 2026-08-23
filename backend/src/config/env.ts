@@ -11,6 +11,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   UPSTASH_REDIS_URL: z.string().optional(),
   ENCRYPTION_KEY: z.string().min(32),
+  FRONTEND_URL: z.string().url().default('http://localhost:5173'),
 })
 
 export const env = envSchema.parse(process.env)

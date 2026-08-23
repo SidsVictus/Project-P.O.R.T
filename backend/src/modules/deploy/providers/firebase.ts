@@ -1,11 +1,8 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import fs from 'fs/promises'
 import path from 'path'
 import { getCredential } from '../../credentials/service'
 import { ProviderDeployResult } from '../../../shared/types'
-
-const execAsync = promisify(exec)
+import { runDeployCommand, sanitizeSiteName, validateUploadDir } from '../secure-deploy'
 
 export async function deployToFirebase(
   userId: string,
@@ -14,6 +11,15 @@ export async function deployToFirebase(
 ): Promise<ProviderDeployResult> {
   const cred = await getCredential(userId, 'firebase')
 
+  if (!cred?.token) {
+    return { success: false, logs: '', error: 'Firebase token required. Add it in Settings > Credentials.' }
+  }
+
+  // Validate and sanitize inputs
+  const safeSiteName = sanitizeSiteName(siteName)
+  const safeUploadDir = validateUploadDir(uploadDir, process.cwd())
+
+  // Write firebase.json securely
   const firebaseJson = {
     hosting: {
       public: '.',
@@ -21,23 +27,41 @@ export async function deployToFirebase(
       rewrites: [{ source: '**', destination: '/index.html' }],
     },
   }
-  await fs.writeFile(path.join(uploadDir, 'firebase.json'), JSON.stringify(firebaseJson, null, 2))
+  await fs.writeFile(path.join(safeUploadDir, 'firebase.json'), JSON.stringify(firebaseJson, null, 2))
 
-  const commands = [
-    cred?.token ? `npx firebase-tools login:ci --token ${cred.token}` : 'npx firebase-tools login',
-    `npx firebase-tools deploy --only hosting -m "Deployed via P.O.R.T"`,
-  ].join(' && ')
+  // Use secure spawn with array arguments - no shell interpolation
+  // First login with token via env var
+  const loginResult = await runDeployCommand('npx', [
+    'firebase-tools',
+    'login:ci',
+    '--token', cred.token,
+  ], {
+    cwd: safeUploadDir,
+    env: { FIREBASE_TOKEN: cred.token },
+    timeout: 60000,
+  })
 
-  try {
-    const { stdout, stderr } = await execAsync(commands, {
-      timeout: 180000,
-      env: { ...process.env, FORCE_COLOR: '0', GCLOUD_PROJECT: siteName },
-      cwd: uploadDir,
-    })
-    const output = stdout + stderr
-    const urlMatch = output.match(/https?:\/\/[^\s]+\.web\.app/)
-    return { success: true, url: urlMatch?.[0], logs: output }
-  } catch (error: any) {
-    return { success: false, logs: error.stdout || '', error: error.message }
+  if (!loginResult.success) {
+    return loginResult
   }
+
+  // Then deploy
+  const deployResult = await runDeployCommand('npx', [
+    'firebase-tools',
+    'deploy',
+    '--only', 'hosting',
+    '-m', 'Deployed via P.O.R.T',
+    '--project', safeSiteName,
+  ], {
+    cwd: safeUploadDir,
+    env: { FIREBASE_TOKEN: cred.token, GCLOUD_PROJECT: safeSiteName },
+    timeout: 180000,
+  })
+
+  if (!deployResult.success) {
+    return deployResult
+  }
+
+  const urlMatch = deployResult.logs.match(/https?:\/\/[^\s]+\.web\.app/)
+  return { success: true, url: urlMatch?.[0], logs: deployResult.logs }
 }

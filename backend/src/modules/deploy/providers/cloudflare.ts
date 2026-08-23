@@ -1,9 +1,6 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import { getCredential } from '../../credentials/service'
 import { ProviderDeployResult } from '../../../shared/types'
-
-const execAsync = promisify(exec)
+import { runDeployCommand, sanitizeSiteName, validateUploadDir } from '../secure-deploy'
 
 export async function deployToCloudflare(
   userId: string,
@@ -13,17 +10,31 @@ export async function deployToCloudflare(
   const cred = await getCredential(userId, 'cloudflare')
   const token = cred?.token || process.env.CLOUDFLARE_API_TOKEN
 
-  const commands = [
-    token ? `CLOUDFLARE_API_TOKEN=${token}` : '',
-    `npx wrangler pages deploy ${uploadDir} --project-name=${siteName}`,
-  ].filter(Boolean).join(' ')
-
-  try {
-    const { stdout, stderr } = await execAsync(commands, { timeout: 180000, env: { ...process.env, FORCE_COLOR: '0' } })
-    const output = stdout + stderr
-    const urlMatch = output.match(/https?:\/\/[^\s]+\.pages\.dev/)
-    return { success: true, url: urlMatch?.[0], logs: output }
-  } catch (error: any) {
-    return { success: false, logs: error.stdout || '', error: error.message }
+  if (!token) {
+    return { success: false, logs: '', error: 'Cloudflare token required. Add it in Settings > Credentials.' }
   }
+
+  // Validate and sanitize inputs
+  const safeSiteName = sanitizeSiteName(siteName)
+  const safeUploadDir = validateUploadDir(uploadDir, process.cwd())
+
+  // Use secure spawn with array arguments - no shell interpolation
+  const result = await runDeployCommand('npx', [
+    'wrangler',
+    'pages',
+    'deploy',
+    safeUploadDir,
+    '--project-name', safeSiteName,
+  ], {
+    cwd: safeUploadDir,
+    env: { CLOUDFLARE_API_TOKEN: token },
+    timeout: 180000,
+  })
+
+  if (!result.success) {
+    return result
+  }
+
+  const urlMatch = result.logs.match(/https?:\/\/[^\s]+\.pages\.dev/)
+  return { success: true, url: urlMatch?.[0], logs: result.logs }
 }
