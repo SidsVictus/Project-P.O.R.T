@@ -1,6 +1,13 @@
 import { getCredential } from '../credentials/service'
 import { Provider } from '../../shared/types'
 
+// ============================================================================
+// WARNING: THIS FILE CONTAINS THE CLI SITE DISCOVERY LOGIC FOR ALL PROVIDERS.
+// Each function queries a hosting provider's REST API to list existing sites
+// from the user's account. This powers the "Existing Sites" section on the Dashboard.
+// DO NOT MODIFY, DELETE, OR REFACTOR THIS FILE WITHOUT EXPLICIT USER APPROVAL.
+// ============================================================================
+
 export interface ProviderSite {
   name: string
   url: string

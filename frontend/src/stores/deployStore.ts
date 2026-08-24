@@ -10,6 +10,7 @@ interface DeployState {
   uploadDir: string | null
   uploadedFiles: FileInfo[]
   provider: Provider
+  customCliName: string | null
   siteName: string
   hostingEmail: string
   scheduledAt: string
@@ -22,6 +23,7 @@ interface DeployState {
   setUploadedFiles: (files: FileInfo[]) => void
   removeUploadedFile: (file: string) => void
   setProvider: (p: Provider) => void
+  setCustomCliName: (name: string | null) => void
   setSiteName: (n: string) => void
   setHostingEmail: (e: string) => void
   setScheduledAt: (t: string) => void
@@ -37,6 +39,7 @@ const initialState = {
   uploadDir: null as string | null,
   uploadedFiles: [] as FileInfo[],
   provider: 'surge' as Provider,
+  customCliName: null as string | null,
   siteName: '',
   hostingEmail: '',
   scheduledAt: '',
@@ -53,6 +56,7 @@ export const useDeployStore = create<DeployState>((set) => ({
   setUploadedFiles: (files) => set({ uploadedFiles: files }),
   removeUploadedFile: (file) => set((s) => ({ uploadedFiles: s.uploadedFiles.filter((f) => f.name !== file) })),
   setProvider: (p) => set({ provider: p }),
+  setCustomCliName: (name) => set({ customCliName: name }),
   setSiteName: (n) => set({ siteName: n }),
   setHostingEmail: (e) => set({ hostingEmail: e }),
   setScheduledAt: (t) => set({ scheduledAt: t }),

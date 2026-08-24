@@ -20,6 +20,7 @@ import webhookRoutes from './modules/webhooks/routes'
 import notificationRoutes from './modules/notifications/routes'
 import analyticsRoutes from './modules/analytics/routes'
 import providerSitesRoutes from './modules/provider-sites/routes'
+import customProvidersRoutes from './modules/custom-providers/routes'
 
 const app = express()
 const server = createServer(app)
@@ -120,6 +121,7 @@ app.use('/api/webhooks', webhookRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/provider-sites', providerSitesRoutes)
+app.use('/api/custom-providers', customProvidersRoutes)
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Server error:', err.message, err.stack)

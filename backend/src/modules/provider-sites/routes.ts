@@ -5,6 +5,14 @@ import { getAllCredentials } from '../credentials/service'
 import { AuthRequest } from '../../shared/types'
 import { Provider } from '../../shared/types'
 
+// ============================================================================
+// WARNING: THIS ROUTE HANDLES CLI SITE DISCOVERY FOR ALL CONNECTED PROVIDERS.
+// This fetches and lists all existing sites from a user's hosting accounts
+// (Surge, Netlify, Vercel, Cloudflare, Firebase, GitHub Pages).
+// It is used by the "Existing Sites" section on the Dashboard.
+// DO NOT MODIFY, DELETE, OR REFACTOR THIS FILE WITHOUT EXPLICIT USER APPROVAL.
+// ============================================================================
+
 const router = Router()
 
 const VALID_PROVIDERS: Provider[] = ['surge', 'netlify', 'vercel', 'cloudflare', 'firebase', 'github']
@@ -22,6 +30,9 @@ router.get('/:provider', requireAuth, async (req: AuthRequest, res) => {
   }
 })
 
+// GET /api/provider-sites - Lists all sites across all connected hosting providers.
+// This endpoint reads the user's stored credentials, queries each provider's API,
+// and returns a unified list of sites. Used by the Dashboard "Existing Sites" section.
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const creds = await getAllCredentials(req.userId!)
