@@ -21,7 +21,7 @@ export function Sidebar() {
 
   return (
     <aside className={cn(
-      'fixed left-0 top-0 z-40 h-screen border-r border-white/30 bg-white/30 backdrop-blur-xl transition-all duration-300 flex flex-col',
+      'fixed left-0 top-0 z-40 h-screen border-r border-white/30 dark:border-white/10 bg-white/30 dark:bg-[hsl(225,20%,10%)]/70 backdrop-blur-xl transition-all duration-300 flex flex-col',
       sidebarOpen ? 'w-64' : 'w-[100px]'
     )}>
       <div className="flex items-center justify-between p-4 h-16">

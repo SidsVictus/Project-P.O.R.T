@@ -5,6 +5,7 @@ import { Bell, Rocket, AlertTriangle, RefreshCw, Bug } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { AnimatePresence, motion } from 'framer-motion'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 const ICONS: Record<string, any> = {
   deploy_success: Rocket,
@@ -39,11 +40,12 @@ export function Header() {
 
   return (
     <header
-      className="fixed top-3 right-3 z-30 h-14 bg-white/25 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm flex items-center justify-between px-6 transition-all duration-300"
+      className="fixed top-3 right-3 z-30 h-14 bg-white/25 dark:bg-[hsl(225,20%,13%)]/60 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-sm flex items-center justify-between px-6 transition-all duration-300"
       style={{ left: sidebarOpen ? '260px' : '106px' }}
     >
       <div />
       <div className="flex items-center gap-4 relative">
+        <ThemeToggle className="!bg-white/20 dark:!bg-white/5 !border-white/20 dark:!border-white/10" />
         <div className="relative">
           <button onClick={() => { setOpen(!open); setExpanded(false) }} className="p-2 rounded-lg hover:bg-secondary transition-colors relative">
             <Bell className="h-5 w-5 text-muted-foreground" />
@@ -59,7 +61,7 @@ export function Header() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white shadow-xl border border-border/50 overflow-hidden z-50"
+                className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white dark:bg-[hsl(225,20%,13%)] shadow-xl border border-border/50 overflow-hidden z-50"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
                   <span className="text-sm font-semibold">Notifications</span>

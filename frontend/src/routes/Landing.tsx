@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Rocket, Globe, Shield, Zap, Clock, Webhook, BarChart3, Bell, ArrowRight, Sparkles, ChevronRight } from 'lucide-react'
@@ -6,6 +6,9 @@ import { Button } from '../components/ui/button'
 import { useAuthStore } from '../stores/authStore'
 import { ProviderIcon } from '../components/ui/ProviderIcon'
 import { PROVIDERS } from '../lib/utils'
+import { ThemeToggle } from '../components/ui/ThemeToggle'
+
+const GITHUB_REPO = 'SidsVictus/Project-P.O.R.T'
 
 const features = [
   { icon: Globe, title: 'Multi-Provider', desc: 'Deploy to 6+ hosting platforms from one place', color: 'from-blue-400 to-blue-600' },
@@ -21,24 +24,44 @@ const features = [
 export function Landing() {
   const navigate = useNavigate()
   const { user, initialized } = useAuthStore()
+  const [stars, setStars] = useState<number | null>(null)
 
   useEffect(() => {
-    if (initialized && user) navigate('/dashboard')
-  }, [initialized, user, navigate])
+    fetch(`https://api.github.com/repos/${GITHUB_REPO}`)
+      .then((r) => r.json())
+      .then((data) => setStars(data.stargazers_count))
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[hsl(220,25%,95%)]">
       <div className="fixed inset-0 bg-pattern" />
       <div className="fixed inset-0 mesh-bg pointer-events-none" />
 
-      <nav className="fixed top-3 left-3 right-3 z-50 flex items-center justify-between px-8 lg:px-16 py-3 bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
+      <nav className="fixed top-3 left-3 right-3 z-50 flex items-center justify-between px-8 lg:px-16 py-3 bg-white/15 dark:bg-[hsl(225,20%,13%)]/40 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-sm">
         <div className="flex items-center gap-2.5">
           <img src="/bookmark.png" alt="P.O.R.T" className="h-8 w-8" />
           <span className="text-xl font-bold text-brand-red">P.O.R.T</span>
         </div>
-        <Button onClick={() => navigate('/login')} variant="outline" className="rounded-full px-6 bg-white/50 backdrop-blur-sm border-white/50 hover:bg-white/80">
-          Sign In <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-3">
+          {stars !== null && (
+            <a
+              href={`https://github.com/${GITHUB_REPO}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/40 backdrop-blur-sm border border-white/40 text-sm font-medium text-muted-foreground hover:bg-white/60 transition-colors"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+              </svg>
+              <span>{stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : stars}</span>
+            </a>
+          )}
+          <ThemeToggle />
+          <Button onClick={() => navigate(user ? '/dashboard' : '/login')} variant="outline" className="rounded-full px-6 bg-white/50 backdrop-blur-sm border-white/50 hover:bg-white/80">
+            {user ? 'Dashboard' : 'Sign In'} <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
       </nav>
 
       <section className="relative z-10 max-w-6xl mx-auto px-8 pt-16 lg:pt-24 pb-28 text-center">
