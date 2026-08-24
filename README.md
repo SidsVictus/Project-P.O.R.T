@@ -1,5 +1,7 @@
 <div align="center">
-  <img src="frontend/public/bookmark.png" alt="P.O.R.T" width="80" />
+  <a href="https://projectport.surge.sh">
+    <img src="frontend/public/bookmark.png" alt="P.O.R.T" width="80" />
+  </a>
   <h1>P.O.R.T</h1>
   <p><strong>Deploy Anything. Everywhere.</strong></p>
   <p>A browser-based deployment hub that lets you upload website files, pick a hosting provider, and deploy — all from one place.</p>
@@ -59,11 +61,3 @@ REDIS_URL=
 ENCRYPTION_KEY=
 FRONTEND_URL=http://localhost:5173
 ```
-
-## Live
-
-→ [projectport.surge.sh](https://projectport.surge.sh)
-
-## License
-
-MIT
