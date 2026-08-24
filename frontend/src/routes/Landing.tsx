@@ -1,24 +1,77 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Rocket, Globe, Shield, Zap, Clock, Webhook, BarChart3, Bell, ArrowRight, Sparkles, ChevronRight } from 'lucide-react'
+import { Globe, Shield, Clock, Webhook, BarChart3, Bell, ArrowRight, Sparkles, ChevronRight } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { useAuthStore } from '../stores/authStore'
-import { ProviderIcon } from '../components/ui/ProviderIcon'
-import { PROVIDERS } from '../lib/utils'
 import { ThemeToggle } from '../components/ui/ThemeToggle'
+import { ShieldSvg, ClockSvg, BellSvg, GlobeSvg, AnalyticsSvg, WebhookSvg } from '../components/landing/SvgAnimations'
 
 const GITHUB_REPO = 'SidsVictus/Project-P.O.R.T'
 
-const features = [
-  { icon: Globe, title: 'Multi-Provider', desc: 'Deploy to 6+ hosting platforms from one place', color: 'from-blue-400 to-blue-600' },
-  { icon: Zap, title: 'Instant Deploy', desc: 'One-click deployment in seconds', color: 'from-sky-400 to-cyan-500' },
-  { icon: Clock, title: 'Schedule Deploys', desc: 'Set date and time for auto-deployment', color: 'from-indigo-400 to-violet-500' },
-  { icon: Webhook, title: 'Git Webhooks', desc: 'Auto-deploy on every GitHub push', color: 'from-blue-500 to-indigo-500' },
-  { icon: Shield, title: 'Secure Auth', desc: 'Google OAuth with Supabase', color: 'from-cyan-400 to-teal-500' },
-  { icon: BarChart3, title: 'Analytics', desc: 'Track visits to your deployed sites', color: 'from-sky-500 to-blue-500' },
-  { icon: Bell, title: 'Notifications', desc: 'Email and Slack alerts on deploy status', color: 'from-blue-400 to-purple-500' },
-  { icon: Rocket, title: 'Templates', desc: 'Save and reuse deploy configurations', color: 'from-indigo-500 to-blue-600' },
+function DeployTerminal() {
+  const [phase, setPhase] = useState(0)
+  const [typed, setTyped] = useState('')
+
+  const cmd = 'npx port deploy my-site --provider netlify'
+
+  useEffect(() => {
+    if (phase === 0) {
+      let i = 0
+      const iv = setInterval(() => {
+        i++
+        setTyped(cmd.slice(0, i))
+        if (i >= cmd.length) { clearInterval(iv); setTimeout(() => setPhase(1), 400) }
+      }, 35)
+      return () => clearInterval(iv)
+    }
+  }, [phase])
+
+  const lines = [
+    { text: '$ ' + cmd, delay: 0 },
+    { text: ' Packaged 14 files (2.3 MB)', delay: 600 },
+    { text: ' Uploading to netlify.com...', delay: 1200 },
+    { text: ' ✓ Deployed to my-site.netlify.com', delay: 2000, color: 'text-emerald-400' },
+  ]
+
+  return (
+    <div className="bg-[hsl(220,14%,8%)] rounded-xl p-5 font-mono text-sm leading-relaxed overflow-hidden min-h-[160px]">
+      {lines.map((line, i) => (
+        <TerminalLine key={i} {...line} phase={phase} />
+      ))}
+    </div>
+  )
+}
+
+function TerminalLine({ text, delay, color, phase }: { text: string; delay: number; color?: string; phase: number }) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (phase >= 1) {
+      const t = setTimeout(() => setVisible(true), delay)
+      return () => clearTimeout(t)
+    }
+  }, [phase, delay])
+
+  if (!visible) return null
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -6 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className={color || 'text-gray-300'}
+    >
+      {text}
+    </motion.div>
+  )
+}
+
+const features: { icon: any; title: string; desc: string; className: string; svg: 'globe' | 'shield' | 'analytics' | 'clock' | 'webhook' | 'bell' }[] = [
+  { icon: Globe, title: 'Multi-Provider', desc: 'Deploy to 6+ hosting platforms from one place', className: 'col-span-2 row-span-1', svg: 'globe' },
+  { icon: BarChart3, title: 'Analytics', desc: 'Track visits to your deployed sites', className: 'col-span-1 row-span-1', svg: 'analytics' },
+  { icon: Shield, title: 'Secure Auth', desc: 'Google OAuth with Supabase', className: 'col-span-1 row-span-2', svg: 'shield' },
+  { icon: Clock, title: 'Schedule Deploys', desc: 'Set date and time for auto-deployment', className: 'col-span-1 row-span-1', svg: 'clock' },
+  { icon: Webhook, title: 'Git Webhooks', desc: 'Auto-deploy on every GitHub push', className: 'col-span-1 row-span-1', svg: 'webhook' },
+  { icon: Bell, title: 'Notifications', desc: 'Email and Slack alerts on deploy status', className: 'col-span-2 row-span-1', svg: 'bell' },
 ]
 
 export function Landing() {
@@ -35,10 +88,10 @@ export function Landing() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[hsl(220,25%,95%)]">
-      <div className="fixed inset-0 bg-pattern" />
       <div className="fixed inset-0 mesh-bg pointer-events-none" />
+      <div className="fixed inset-0 bg-pattern" />
 
-      <nav className="fixed top-3 left-3 right-3 z-50 flex items-center justify-between px-8 lg:px-16 py-3 bg-white/15 dark:bg-[hsl(225,20%,13%)]/40 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-sm">
+      <nav className="fixed top-3 left-3 right-3 z-50 flex items-center justify-between px-8 lg:px-16 py-3 bg-white/15 dark:bg-[hsl(220,14%,11%)]/60 backdrop-blur-xl border border-white/20 dark:border-white/8 rounded-2xl shadow-sm">
         <div className="flex items-center gap-2.5">
           <img src="/bookmark.png" alt="P.O.R.T" className="h-8 w-8" />
           <span className="text-xl font-bold text-brand-red">P.O.R.T</span>
@@ -74,11 +127,11 @@ export function Landing() {
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tight leading-[0.92] mb-6">
             <span className="text-brand-red">Deploy</span>
             <span className="block text-brand-red">Anything</span>
-            <span className="text-muted-foreground/50 text-4xl sm:text-5xl md:text-7xl">Everywhere</span>
+            <span className="text-white text-4xl sm:text-5xl md:text-7xl">Everywhere</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed">
-            Your central hub for deploying websites to every major hosting platform. Beautiful, fast, and completely free.
+            Your central hub for deploying sites to every major hosting platform. Easy, fast, and completely free.
           </p>
 
           <Button size="lg" onClick={() => navigate('/login')} className="rounded-full px-10 py-6 text-base btn-glow bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-xl shadow-blue-500/20">
@@ -92,20 +145,9 @@ export function Landing() {
               <div className="h-3 w-3 rounded-full bg-rose-400/80" />
               <div className="h-3 w-3 rounded-full bg-amber-400/80" />
               <div className="h-3 w-3 rounded-full bg-emerald-400/80" />
-              <span className="ml-2 text-xs text-muted-foreground font-mono">P.O.R.T</span>
+              <span className="ml-2 text-xs text-muted-foreground font-mono">terminal</span>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              {(['surge', 'netlify', 'vercel'] as const).map((id) => (
-                <div key={id} className="rounded-2xl bg-white/70 p-5 text-center border border-white/50 hover:shadow-lg transition-shadow duration-300">
-                  <div className="mx-auto mb-3"><ProviderIcon provider={id} size="lg" /></div>
-                  <p className="text-[11px] font-mono text-muted-foreground truncate">my-site.{PROVIDERS.find((p) => p.id === id)?.url}</p>
-                  <div className="flex items-center justify-center gap-1 mt-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span className="text-[10px] text-emerald-600 font-medium">Live</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DeployTerminal />
           </div>
         </motion.div>
       </section>
@@ -113,29 +155,30 @@ export function Landing() {
       <section className="relative z-10 max-w-6xl mx-auto px-8 pb-28">
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-5xl font-bold mb-3 text-brand-red">Everything you need</h2>
-          <p className="text-muted-foreground text-lg">Powerful features, beautifully simple</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid sm:grid-cols-3 auto-rows-[200px] gap-4">
           {features.map((f, i) => (
             <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.06 }}
-              className="glass glass-hover rounded-2xl p-6 cursor-default group transition-all duration-300"
+              className={`glass glass-hover rounded-2xl p-5 cursor-default group transition-all duration-300 relative overflow-hidden ${f.className}`}
             >
-              <h3 className="font-semibold mb-1">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              {f.svg === 'globe' && <GlobeSvg />}
+              {f.svg === 'shield' && <ShieldSvg />}
+              {f.svg === 'analytics' && <AnalyticsSvg />}
+              {f.svg === 'clock' && <ClockSvg />}
+              {f.svg === 'webhook' && <WebhookSvg />}
+              {f.svg === 'bell' && <BellSvg />}
+              <h3 className="font-semibold text-sm relative z-10">{f.title}</h3>
+              <p className="text-xs text-muted-foreground leading-snug relative z-10 mt-0.5">{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       <footer className="relative z-10 border-t border-border/50 py-10 text-center text-sm text-muted-foreground">
-        <p className="mb-4">Built with love · All hosting providers offer free tiers · $0 forever</p>
-        <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground/60">
+        <p className="mb-4">All hosting providers offer free tiers · $0 forever</p>
+        <div className="flex items-center justify-center text-xs text-muted-foreground/60">
           <span>&copy; {new Date().getFullYear()} P.O.R.T. All rights reserved.</span>
-          <span>·</span>
-          <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-          <span>·</span>
-          <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
         </div>
       </footer>
     </div>

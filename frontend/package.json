@@ -22,8 +22,11 @@
     "@radix-ui/react-switch": "^1.1.2",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
     "@supabase/supabase-js": "^2.47.0",
     "@tanstack/react-query": "^5.62.0",
+    "@types/three": "^0.185.4",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "canvas-confetti": "^1.9.3",
@@ -41,6 +44,7 @@
     "recharts": "^3.10.1",
     "socket.io-client": "^4.8.0",
     "tailwind-merge": "^2.6.0",
+    "three": "^0.185.1",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

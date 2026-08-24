@@ -9,9 +9,9 @@ export function Layout() {
   const { sidebarOpen } = useUIStore()
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[hsl(220,25%,95%)]">
-      <div className="fixed inset-0 bg-pattern" />
+    <div className="min-h-screen relative overflow-hidden bg-[hsl(220,25%,95%)] dark:bg-[hsl(220,14%,18%)]">
       <div className="fixed inset-0 mesh-bg pointer-events-none" />
+      <div className="fixed inset-0 bg-pattern" />
       <Sidebar />
       <Header />
       <main

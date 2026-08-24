@@ -9,7 +9,7 @@ import {
 interface Section {
   id: string
   title: string
-  icon: React.ElementType
+  icon: React.ElementType<{className?: string}>,
   content: React.ReactNode
 }
 
