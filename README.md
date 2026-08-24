@@ -1,8 +1,9 @@
-# P.O.R.T
-
-**Deploy Anything. Everywhere.**
-
-A browser-based deployment hub that lets you upload website files, pick a hosting provider, and deploy — all from one place.
+<div align="center">
+  <img src="frontend/public/bookmark.png" alt="P.O.R.T" width="80" />
+  <h1>P.O.R.T</h1>
+  <p><strong>Deploy Anything. Everywhere.</strong></p>
+  <p>A browser-based deployment hub that lets you upload website files, pick a hosting provider, and deploy — all from one place.</p>
+</div>
 
 ## Features
 

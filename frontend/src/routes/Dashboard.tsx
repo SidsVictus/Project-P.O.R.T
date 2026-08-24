@@ -221,6 +221,9 @@ export function Dashboard() {
 
         {isLoading || loadingProviders ? (
             <div className="space-y-4">
+              <div className="text-center py-10">
+                <p className="text-sm text-muted-foreground">It might take a min to load the sites...</p>
+              </div>
               {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 w-full" />)}
             </div>
           ) : !sites?.length && !providerSites?.length ? (

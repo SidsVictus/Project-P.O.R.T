@@ -86,6 +86,10 @@ export function Landing() {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    if (initialized && user) navigate('/dashboard', { replace: true })
+  }, [initialized, user, navigate])
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-[hsl(220,25%,95%)]">
       <div className="fixed inset-0 mesh-bg pointer-events-none" />
